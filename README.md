@@ -1,9 +1,11 @@
 # DoingLio
 
+<p align="center"><img src="brain-davinci.svg" width="86" alt="Icono cerebro Da Vinci"></p>
+
 [![Ver Trello](https://img.shields.io/badge/VER-TRELLO-0052CC?style=for-the-badge)](https://trello.com/c/BE027nnM)
 [![Abrir DoingLio](https://img.shields.io/badge/▶%20ABRIR-DOINGLIO-ff6b35?style=for-the-badge)](https://doinglio.revalsoftia.chatgpt.site/)
-[![Capitán Rodolfo](https://img.shields.io/badge/🧠%20ABRIR-CAPITÁN%20RODOLFO-c8793f?style=for-the-badge)](https://capitan-rodolfo.revalsoftia.chatgpt.site/)
-[![Ruben](https://img.shields.io/badge/🧠%20VER%20REPO-RUBEN-54bfc3?style=for-the-badge)](https://github.com/DuilioMF/ruben)
+[![Capitán Rodolfo](https://img.shields.io/badge/ABRIR-CAPITÁN%20RODOLFO-c8793f?style=for-the-badge)](https://capitan-rodolfo.revalsoftia.chatgpt.site/)
+[![Ruben](https://img.shields.io/badge/VER%20REPO-RUBEN-54bfc3?style=for-the-badge)](https://github.com/DuilioMF/ruben)
 
 ## Qué es
 
