@@ -3,9 +3,9 @@
 <p align="center"><img src="brain-davinci.svg" width="86" alt="Icono cerebro Da Vinci"></p>
 
 [![Ver Trello](https://img.shields.io/badge/VER-TRELLO-0052CC?style=for-the-badge)](https://trello.com/c/BE027nnM)
-[![Abrir DoingLio](https://img.shields.io/badge/▶%20ABRIR-DOINGLIO-ff6b35?style=for-the-badge)](https://doinglio.revalsoftia.chatgpt.site/)
-[![Capitán Rodolfo](https://img.shields.io/badge/ABRIR-CAPITÁN%20RODOLFO-c8793f?style=for-the-badge)](https://capitan-rodolfo.revalsoftia.chatgpt.site/)
-[![Ruben](https://img.shields.io/badge/VER%20REPO-RUBEN-54bfc3?style=for-the-badge)](https://github.com/DuilioMF/ruben)
+[![Abrir DoingLio](https://img.shields.io/badge/▶%20ABRIR-DOINGLIO-ff6b35?style=for-the-badge)](https://duiliomf.github.io/doinglio/)
+[![Capitán Rodolfo](https://img.shields.io/badge/ABRIR-CAPITÁN%20RODOLFO-c8793f?style=for-the-badge)](https://duiliomf.github.io/capitan-rodolfo/)
+[![Ruben](https://img.shields.io/badge/ABRIR-RUBEN-54bfc3?style=for-the-badge)](https://duiliomf.github.io/ruben/)
 
 ## Qué es
 
@@ -22,9 +22,8 @@ Cuaderno Maestro de DoingLio. Es la puerta de entrada general a los especialista
 
 - Repositorio: `DuilioMF/doinglio`
 - Rama principal: `main`
-- Web activa verificada: `https://doinglio.revalsoftia.chatgpt.site/`
-- GitHub Pages objetivo: `https://duiliomf.github.io/doinglio/`
-- GitHub Pages: pendiente de habilitación en el repositorio.
+- Web GitHub Pages: `https://duiliomf.github.io/doinglio/`
+- GitHub Pages: habilitado y publicado.
 
 ## Conexión
 
