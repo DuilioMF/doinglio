@@ -1,6 +1,8 @@
 # DoingLio
 
 [![Abrir DoingLio](https://img.shields.io/badge/▶%20ABRIR-DOINGLIO-ff6b35?style=for-the-badge)](https://doinglio.revalsoftia.chatgpt.site/)
+[![Capitán Rodolfo](https://img.shields.io/badge/🧠%20ABRIR-CAPITÁN%20RODOLFO-c8793f?style=for-the-badge)](https://duiliomf.github.io/capitan-rodolfo/)
+[![Ruben](https://img.shields.io/badge/🧠%20VER-RUBEN-54bfc3?style=for-the-badge)](https://github.com/DuilioMF/ruben)
 
 ## Qué es
 
