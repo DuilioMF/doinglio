@@ -20,14 +20,21 @@
     .systems{position:relative;z-index:2;width:min(1050px,90vw);margin:0 auto 70px;display:grid;grid-template-columns:1fr 1fr;gap:20px}
     .card{position:relative;min-height:280px;padding:38px 36px 30px;border:1px solid #ffffff16;background:linear-gradient(135deg,#ffffff0a,#ffffff03);text-decoration:none;color:inherit;overflow:hidden;transition:.35s ease}
     .card:hover{transform:translateY(-6px);border-color:var(--accent);box-shadow:0 22px 80px #0009,inset 0 0 70px var(--glow)}
-    .card.rodolfo{--accent:var(--orange);--glow:#f0800018}.card.ruben{--accent:var(--cyan);--glow:#1cbfc518}
+    .card.rodolfo{--accent:var(--orange);--glow:#f0800018;background:radial-gradient(circle at 82% 42%,#8a451516,transparent 32%),linear-gradient(135deg,#ffffff0a,#ffffff03)}
+    .card.ruben{--accent:var(--cyan);--glow:#1cbfc518;background:radial-gradient(circle at 82% 42%,#126b7118,transparent 32%),linear-gradient(135deg,#ffffff0a,#ffffff03)}
+    .blueprint{position:absolute;right:20px;top:58px;width:250px;height:150px;opacity:.72;pointer-events:none}
+    .blueprint *{fill:none;stroke:var(--accent);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+    .blueprint .soft{opacity:.24;stroke-dasharray:4 7}.blueprint .fill{fill:color-mix(in srgb,var(--accent) 8%,transparent)}
+    .rodolfo .blueprint{width:270px;height:165px;right:15px;top:56px}
+    .ruben .blueprint{width:255px;height:155px;right:20px;top:62px}
+    .tagline{display:block;margin-top:11px;color:var(--accent);font:italic 15px "Cormorant Garamond",serif;letter-spacing:.03em}
     .num{position:absolute;right:24px;top:16px;font:italic 46px "Cormorant Garamond",serif;color:#ffffff10}.orbit{position:absolute;right:-75px;top:25px;width:230px;height:230px;border:1px solid color-mix(in srgb,var(--accent) 28%,transparent);border-radius:50%}
     .orbit:before,.orbit:after{content:"";position:absolute;border:1px solid color-mix(in srgb,var(--accent) 18%,transparent);border-radius:50%;inset:28px}.orbit:after{inset:62px}
     .eyebrow{font-size:8px;letter-spacing:.3em;color:var(--accent)}.card h2{font:600 42px "Cormorant Garamond",serif;margin:15px 0 12px}.card p{max-width:72%;font-size:12px;line-height:1.7;color:#a29c91}
     .meta{position:absolute;left:36px;bottom:30px;font-size:8px;letter-spacing:.16em;color:#aaa398}.dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 13px var(--accent);margin-right:10px}
     .go{position:absolute;right:28px;bottom:25px;font-size:8px;letter-spacing:.18em;color:#bbb4aa}.go b{font-size:20px;color:var(--accent);margin-left:8px}.pending{opacity:.92}.pending .go{color:#7d7770}
     footer{position:relative;z-index:2;display:flex;justify-content:center;align-items:center;gap:18px;padding:20px;color:#625f59;font-size:7px;letter-spacing:.25em}footer i{width:36px;height:1px;background:#776239}
-    @media(max-width:760px){.code{display:none}.hero{padding-top:6vh}.hero h1{font-size:54px}.systems{grid-template-columns:1fr}.card{min-height:245px;padding:30px 25px}.card p{max-width:80%}.meta{left:25px}}
+    @media(max-width:760px){.code{display:none}.hero{padding-top:6vh}.hero h1{font-size:54px}.systems{grid-template-columns:1fr}.card{min-height:300px;padding:30px 25px}.card p{max-width:62%}.meta{left:25px}.blueprint{opacity:.42;right:-28px!important;top:85px!important;transform:scale(.9);transform-origin:right center}}
     @media(prefers-reduced-motion:reduce){*{transition:none!important}}
   </style>
 </head>
@@ -49,21 +56,43 @@
 
     <section class="systems">
       <a class="card rodolfo" href="https://duiliomf.github.io/capitan-rodolfo/" target="_blank" rel="noopener">
-        <span class="num">01</span><span class="orbit" aria-hidden="true"></span>
-        <span class="eyebrow">ESTACIONES DE SERVICIO</span>
+        <span class="num">01</span>
+        <svg class="blueprint" viewBox="0 0 300 180" aria-hidden="true">
+          <circle class="soft" cx="225" cy="90" r="73"/>
+          <circle class="soft" cx="225" cy="90" r="54"/>
+          <path d="M28 130h244M45 130v-42h45v42M50 88l8-28h19l8 28"/>
+          <path d="M57 72h20M112 130V76h42v54M118 83h30v18h-30zM134 101v17"/>
+          <path d="M154 94c23 0 20 30 39 30"/>
+          <path d="M188 124h58l10-23h23l14 23h7v12H184v-12h4z"/>
+          <circle cx="213" cy="137" r="9"/><circle cx="272" cy="137" r="9"/>
+          <path d="M18 145c35 8 76 8 111 0s76-8 111 0 42 5 58 0"/>
+          <path class="soft" d="M40 52h80M104 63h74M188 47h92"/>
+        </svg>
+        <span class="eyebrow">ESTACIÓN DE SERVICIO</span>
         <h2>Capitán Rodolfo</h2>
-        <p>Combustible, surtidores, ventas y cobros dentro del tablero vivo de la estación.</p>
+        <p>Combustible, tanques, surtidores, despachos, ventas y cobros dentro del tablero vivo de la estación.</p>
+        <span class="tagline">tanque → surtidor → auto → cobro</span>
         <span class="meta"><span class="dot"></span>GITHUB PAGES · REPO INDEPENDIENTE</span>
         <span class="go">ABRIR <b>↗</b></span>
       </a>
 
-      <a class="card ruben pending" href="https://github.com/DuilioMF/ruben" target="_blank" rel="noopener">
-        <span class="num">02</span><span class="orbit" aria-hidden="true"></span>
-        <span class="eyebrow">SINIESTROS</span>
+      <a class="card ruben" href="https://duiliomf.github.io/ruben/" target="_blank" rel="noopener">
+        <span class="num">02</span>
+        <svg class="blueprint" viewBox="0 0 300 180" aria-hidden="true">
+          <circle class="soft" cx="228" cy="88" r="68"/>
+          <path d="M35 124h65l13-31h44l25 31h18v14H28v-14h7z"/>
+          <circle cx="67" cy="140" r="10"/><circle cx="157" cy="140" r="10"/>
+          <path d="M167 79l16-18 7 15 19-18 4 20 24-6-8 21 24 8-20 13"/>
+          <rect x="210" y="112" width="62" height="48" rx="2"/>
+          <path d="M220 124h39M220 135h32M220 146h36"/>
+          <path class="soft" d="M18 51h85M30 63h55M200 41h76"/>
+        </svg>
+        <span class="eyebrow">SINIESTROS · REPARACIÓN</span>
         <h2>Ruben</h2>
-        <p>Presupuesto, autorización, pedido, reparación, entrega, facturación y cobranza.</p>
-        <span class="meta"><span class="dot"></span>REPO CREADO · SITE A RECUPERAR</span>
-        <span class="go">VER REPO <b>↗</b></span>
+        <p>Del choque al cierre: presupuesto, autorización, repuestos, reparación, entrega, facturación y cobranza.</p>
+        <span class="tagline">siniestro → presupuesto → reparación → entrega</span>
+        <span class="meta"><span class="dot"></span>GITHUB PAGES · WEB INDEPENDIENTE</span>
+        <span class="go">ABRIR <b>↗</b></span>
       </a>
     </section>
   </main>
