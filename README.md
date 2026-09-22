@@ -43,3 +43,8 @@ DoingLio no se conecta directamente a SQL Server ni PostgreSQL. Cada especialist
 ## Versionado
 
 Cada cambio debe quedar en un commit recuperable antes de publicar. Conservar rollback.
+
+
+## Publicación vigente — 22/09/2026
+
+GitHub es la fuente de código y GitHub Pages publica `main`. No usar copias de Sites como origen ni destino de navegación. Cada cambio se integra por PR y conserva su commit para rollback. Tema claro/oscuro compartido entre páginas; control arriba y regreso debajo.
