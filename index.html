@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#090907" />
+  <title>DoingLio · Cuaderno Maestro</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,600&family=Inter:wght@400;500;600;700&display=swap');
+    :root{--bg:#080807;--paper:#11100d;--ink:#efe8d8;--muted:#9b9487;--gold:#cba45d;--orange:#dc8623;--cyan:#54bfc3;--line:#ffffff18}
+    *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,sans-serif}
+    body{min-height:100vh;overflow-x:hidden;background:radial-gradient(circle at 50% 28%,#262118 0,#100f0c 34%,#080807 72%)}
+    body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.12;background-image:linear-gradient(#d2b06a22 1px,transparent 1px),linear-gradient(90deg,#d2b06a22 1px,transparent 1px);background-size:44px 44px;mask-image:radial-gradient(circle at center,#000,transparent 80%)}
+    .top{position:relative;z-index:2;display:flex;justify-content:space-between;align-items:center;padding:26px 5vw;border-bottom:1px solid #ffffff10}
+    .brand{display:flex;gap:14px;align-items:center}.mark{width:46px;height:46px;border:1px solid #cfa65588;border-radius:50%;position:relative;display:grid;place-items:center;font-family:"Cormorant Garamond",serif;color:#d9b76d}
+    .mark:before,.mark:after{content:"";position:absolute;background:#cfa65570}.mark:before{width:56px;height:1px}.mark:after{width:1px;height:56px}.mark i{width:27px;height:27px;border:1px solid #cfa65570;transform:rotate(45deg)}
+    .brand strong{display:block;font-size:14px;letter-spacing:.34em}.brand small{display:block;margin-top:5px;color:#8f887a;font-size:8px;letter-spacing:.24em}
+    .code{font-size:8px;letter-spacing:.25em;color:#7d766a}
+    .hero{position:relative;z-index:2;text-align:center;padding:8vh 20px 5vh}.hero small{font-size:9px;letter-spacing:.48em;color:#c69a4b}.hero h1{font:600 clamp(54px,7vw,96px)/.9 "Cormorant Garamond",serif;letter-spacing:-.04em;margin:22px 0 18px}.hero h1 em{font-weight:500;color:#d7ad5d}.hero p{color:#8f887e;font-size:14px;letter-spacing:.06em;margin:0}
+    .systems{position:relative;z-index:2;width:min(1050px,90vw);margin:0 auto 70px;display:grid;grid-template-columns:1fr 1fr;gap:20px}
+    .card{position:relative;min-height:280px;padding:38px 36px 30px;border:1px solid #ffffff16;background:linear-gradient(135deg,#ffffff0a,#ffffff03);text-decoration:none;color:inherit;overflow:hidden;transition:.35s ease}
+    .card:hover{transform:translateY(-6px);border-color:var(--accent);box-shadow:0 22px 80px #0009,inset 0 0 70px var(--glow)}
+    .card.rodolfo{--accent:var(--orange);--glow:#f0800018}.card.ruben{--accent:var(--cyan);--glow:#1cbfc518}
+    .num{position:absolute;right:24px;top:16px;font:italic 46px "Cormorant Garamond",serif;color:#ffffff10}.orbit{position:absolute;right:-75px;top:25px;width:230px;height:230px;border:1px solid color-mix(in srgb,var(--accent) 28%,transparent);border-radius:50%}
+    .orbit:before,.orbit:after{content:"";position:absolute;border:1px solid color-mix(in srgb,var(--accent) 18%,transparent);border-radius:50%;inset:28px}.orbit:after{inset:62px}
+    .eyebrow{font-size:8px;letter-spacing:.3em;color:var(--accent)}.card h2{font:600 42px "Cormorant Garamond",serif;margin:15px 0 12px}.card p{max-width:72%;font-size:12px;line-height:1.7;color:#a29c91}
+    .meta{position:absolute;left:36px;bottom:30px;font-size:8px;letter-spacing:.16em;color:#aaa398}.dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 13px var(--accent);margin-right:10px}
+    .go{position:absolute;right:28px;bottom:25px;font-size:8px;letter-spacing:.18em;color:#bbb4aa}.go b{font-size:20px;color:var(--accent);margin-left:8px}.pending{opacity:.92}.pending .go{color:#7d7770}
+    footer{position:relative;z-index:2;display:flex;justify-content:center;align-items:center;gap:18px;padding:20px;color:#625f59;font-size:7px;letter-spacing:.25em}footer i{width:36px;height:1px;background:#776239}
+    @media(max-width:760px){.code{display:none}.hero{padding-top:6vh}.hero h1{font-size:54px}.systems{grid-template-columns:1fr}.card{min-height:245px;padding:30px 25px}.card p{max-width:80%}.meta{left:25px}}
+    @media(prefers-reduced-motion:reduce){*{transition:none!important}}
+  </style>
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <div class="mark" aria-hidden="true"><i></i></div>
+      <div><strong>DOINGLIO</strong><small>LABORATORIO DE SISTEMAS VIVOS</small></div>
+    </div>
+    <div class="code">D·001</div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <small>CUADERNO MAESTRO</small>
+      <h1>Elegí el sistema<br>que querés <em>activar.</em></h1>
+      <p>Cada especialista vive separado. DoingLio es la puerta de entrada.</p>
+    </section>
+
+    <section class="systems">
+      <a class="card rodolfo" href="https://capitan-rodolfo.revalsoftia.chatgpt.site" target="_blank" rel="noopener">
+        <span class="num">01</span><span class="orbit" aria-hidden="true"></span>
+        <span class="eyebrow">ESTACIONES DE SERVICIO</span>
+        <h2>Capitán Rodolfo</h2>
+        <p>Combustible, surtidores, ventas y cobros dentro del tablero vivo de la estación.</p>
+        <span class="meta"><span class="dot"></span>SITE ACTIVO · REPO INDEPENDIENTE</span>
+        <span class="go">ABRIR <b>↗</b></span>
+      </a>
+
+      <a class="card ruben pending" href="https://github.com/DuilioMF/ruben" target="_blank" rel="noopener">
+        <span class="num">02</span><span class="orbit" aria-hidden="true"></span>
+        <span class="eyebrow">SINIESTROS</span>
+        <h2>Ruben</h2>
+        <p>Presupuesto, autorización, pedido, reparación, entrega, facturación y cobranza.</p>
+        <span class="meta"><span class="dot"></span>REPO CREADO · SITE A RECUPERAR</span>
+        <span class="go">VER REPO <b>↗</b></span>
+      </a>
+    </section>
+  </main>
+
+  <footer><span>REVALSOFT IA</span><i></i><span>DOINGLIO · CUADERNO MAESTRO</span></footer>
+</body>
+</html>
