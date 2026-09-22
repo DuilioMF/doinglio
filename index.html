@@ -12,8 +12,8 @@
     body{min-height:100vh;overflow-x:hidden;background:radial-gradient(circle at 50% 28%,#262118 0,#100f0c 34%,#080807 72%)}
     body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.12;background-image:linear-gradient(#d2b06a22 1px,transparent 1px),linear-gradient(90deg,#d2b06a22 1px,transparent 1px);background-size:44px 44px;mask-image:radial-gradient(circle at center,#000,transparent 80%)}
     .top{position:relative;z-index:2;display:flex;justify-content:space-between;align-items:center;padding:26px 5vw;border-bottom:1px solid #ffffff10}
-    .brand{display:flex;gap:14px;align-items:center}.mark{width:46px;height:46px;border:1px solid #cfa65588;border-radius:50%;position:relative;display:grid;place-items:center;font-family:"Cormorant Garamond",serif;color:#d9b76d}
-    .mark:before,.mark:after{content:"";position:absolute;background:#cfa65570}.mark:before{width:56px;height:1px}.mark:after{width:1px;height:56px}.mark i{width:27px;height:27px;border:1px solid #cfa65570;transform:rotate(45deg)}
+    .brand{display:flex;gap:14px;align-items:center}.mark{width:54px;height:54px;display:grid;place-items:center}
+    .mark img{width:54px;height:54px;display:block;filter:drop-shadow(0 0 10px #d9823b22)}
     .brand strong{display:block;font-size:14px;letter-spacing:.34em}.brand small{display:block;margin-top:5px;color:#8f887a;font-size:8px;letter-spacing:.24em}
     .code{font-size:8px;letter-spacing:.25em;color:#7d766a}
     .hero{position:relative;z-index:2;text-align:center;padding:8vh 20px 5vh}.hero small{font-size:9px;letter-spacing:.48em;color:#c69a4b}.hero h1{font:600 clamp(54px,7vw,96px)/.9 "Cormorant Garamond",serif;letter-spacing:-.04em;margin:22px 0 18px}.hero h1 em{font-weight:500;color:#d7ad5d}.hero p{color:#8f887e;font-size:14px;letter-spacing:.06em;margin:0}
@@ -34,7 +34,7 @@
 <body>
   <header class="top">
     <div class="brand">
-      <div class="mark" aria-hidden="true"><i></i></div>
+      <div class="mark" aria-hidden="true"><img src="brain-davinci.svg" alt=""></div>
       <div><strong>DOINGLIO</strong><small>LABORATORIO DE SISTEMAS VIVOS</small></div>
     </div>
     <div class="code" id="build-code">D·…</div>
