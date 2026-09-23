@@ -17,7 +17,19 @@
     .mark img{width:46px;height:46px;display:block;filter:drop-shadow(0 0 10px #d9823b22)}
     .brand strong{display:block;font-size:14px;letter-spacing:.34em}.brand small{display:block;margin-top:5px;color:#8f887a;font-size:8px;letter-spacing:.24em}
     .code{font-size:8px;letter-spacing:.25em;color:#7d766a}
-    .hero{position:relative;z-index:2;text-align:center;padding:4vh 20px 3vh}.hero small{font-size:9px;letter-spacing:.48em;color:#c69a4b}.hero h1{font:600 clamp(48px,6vw,78px)/.9 "Cormorant Garamond",serif;letter-spacing:-.04em;margin:14px 0 12px}.hero h1 em{font-weight:500;color:#d7ad5d}.hero p{color:#8f887e;font-size:14px;letter-spacing:.06em;margin:0}
+    .hero{position:relative;z-index:2;text-align:center;padding:3vh 20px 2.4vh}.hero small{font-size:9px;letter-spacing:.48em;color:#c69a4b}.hero h1{font:600 clamp(48px,6vw,78px)/.9 "Cormorant Garamond",serif;letter-spacing:-.04em;margin:10px 0 12px}.hero h1 em{font-weight:500;color:#d7ad5d}.hero p{color:#8f887e;font-size:14px;letter-spacing:.06em;margin:0}
+    .doomsday-wrap{width:min(470px,88vw);margin:8px auto 2px;position:relative;display:grid;place-items:center;filter:drop-shadow(0 28px 42px #0009)}
+    .doomsday-clock{width:100%;height:auto;overflow:visible}
+    .doom-spiral{fill:none;stroke:url(#spiralGlow);stroke-width:2.2;stroke-linecap:round;stroke-dasharray:1480;stroke-dashoffset:1480;animation:spiralDraw 5.8s cubic-bezier(.2,.72,.18,1) forwards,spiralBreathe 7s ease-in-out 5.8s infinite;transform-origin:250px 250px}
+    .doom-orbit{fill:none;stroke:#d7ad5d26;stroke-width:1}.doom-orbit.dash{stroke-dasharray:3 9}
+    .doom-tick{stroke:#d7ad5d66;stroke-width:1.5}.doom-tick.major{stroke:#f0c36eaa;stroke-width:2.2}
+    .doom-hand{stroke:#f2d09a;stroke-linecap:round;filter:drop-shadow(0 0 5px #dc862388)}.doom-hand.hour{stroke-width:7}.doom-hand.minute{stroke-width:5}
+    .doom-center-ring{fill:#0b0907;stroke:#f3b35a;stroke-width:2.5;filter:drop-shadow(0 0 13px #dc8623aa)}
+    .doom-center{fill:#ffd083;animation:centerPulse 2.4s ease-in-out infinite;transform-origin:250px 250px}
+    .doom-trail-point{fill:#df8b2e;filter:drop-shadow(0 0 9px #df8b2e);opacity:.9}
+    .doom-time{fill:#d7ad5d;font:600 18px "Cormorant Garamond",serif;letter-spacing:.28em}
+    .doom-label{fill:#8d826f;font:600 8px Inter,sans-serif;letter-spacing:.34em}
+    @keyframes spiralDraw{to{stroke-dashoffset:0}}@keyframes spiralBreathe{0%,100%{opacity:.76;transform:scale(.995)}50%{opacity:1;transform:scale(1.012)}}@keyframes centerPulse{0%,100%{transform:scale(.88);opacity:.75}50%{transform:scale(1.18);opacity:1}}
     .systems{position:relative;z-index:2;width:min(1100px,92vw);margin:0 auto 24px;display:grid;grid-template-columns:1fr 1fr;gap:18px}
     .card{position:relative;min-height:240px;padding:28px 30px 26px;border:1px solid #ffffff16;background:linear-gradient(135deg,#ffffff0a,#ffffff03);text-decoration:none;color:inherit;overflow:hidden;transition:.35s ease}
     .card:hover{transform:translateY(-6px);border-color:var(--accent);box-shadow:0 22px 80px #0009,inset 0 0 70px var(--glow)}
@@ -36,9 +48,9 @@
     .go{position:absolute;right:24px;bottom:19px;font-size:8px;letter-spacing:.18em;color:#bbb4aa}.go b{font-size:20px;color:var(--accent);margin-left:8px}.pending{opacity:.92}.pending .go{color:#7d7770}
     .local-install{position:relative;z-index:2;width:min(1100px,92vw);margin:0 auto 18px;display:flex;justify-content:center}.local-install a{display:inline-flex;align-items:center;gap:10px;padding:13px 18px;border:1px solid #dc862388;background:#dc862318;color:#ffd09b;text-decoration:none;font-size:11px;font-weight:800;letter-spacing:.08em}.local-install a:hover{border-color:#dc8623;background:#dc86232b}.local-install small{color:#8f887e;font-size:10px;letter-spacing:.04em}
     footer{position:relative;z-index:2;display:flex;justify-content:center;align-items:center;gap:18px;padding:10px 20px 14px;color:#625f59;font-size:7px;letter-spacing:.25em}footer i{width:36px;height:1px;background:#776239}
-    @media(min-width:761px) and (max-height:760px){.top{padding:10px 4vw}.mark,.mark img{width:40px;height:40px}.hero{padding:18px 20px 16px}.hero h1{font-size:54px;margin:9px 0}.hero p{font-size:12px}.systems{margin-bottom:10px}.card{min-height:215px;padding:22px 26px}.card h2{font-size:34px}.blueprint{transform:scale(.84);transform-origin:right center}.meta{bottom:16px;left:26px}.go{bottom:13px}footer{padding:6px 15px 10px}}
-    @media(max-width:760px){.code{display:none}.hero{padding-top:6vh}.hero h1{font-size:54px}.systems{grid-template-columns:1fr}.card{min-height:300px;padding:30px 25px}.card p{max-width:62%}.meta{left:25px}.blueprint{opacity:.42;right:-28px!important;top:85px!important;transform:scale(.9);transform-origin:right center}}
-    @media(prefers-reduced-motion:reduce){*{transition:none!important}}
+    @media(min-width:761px) and (max-height:760px){.top{padding:10px 4vw}.mark,.mark img{width:40px;height:40px}.hero{padding:12px 20px 10px}.doomsday-wrap{width:min(330px,48vw);margin:2px auto -4px}.hero h1{font-size:52px;margin:4px 0 7px}.hero p{font-size:12px}.systems{margin-bottom:10px}.card{min-height:215px;padding:22px 26px}.card h2{font-size:34px}.blueprint{transform:scale(.84);transform-origin:right center}.meta{bottom:16px;left:26px}.go{bottom:13px}footer{padding:6px 15px 10px}}
+    @media(max-width:760px){.code{display:none}.hero{padding-top:4vh}.doomsday-wrap{width:min(390px,92vw);margin:8px auto 0}.hero h1{font-size:52px}.systems{grid-template-columns:1fr}.card{min-height:300px;padding:30px 25px}.card p{max-width:62%}.meta{left:25px}.blueprint{opacity:.42;right:-28px!important;top:85px!important;transform:scale(.9);transform-origin:right center}}
+    @media(prefers-reduced-motion:reduce){*{transition:none!important}.doom-spiral{animation:none;stroke-dashoffset:0}.doom-center{animation:none}}
   
 </style>
 <link rel="stylesheet" href="theme.css">
@@ -56,6 +68,56 @@
   <main>
     <section class="hero">
       <small>CUADERNO MAESTRO</small>
+      <div class="doomsday-wrap" aria-label="Reloj espiral de DoingLio marcando las 4:10">
+        <svg class="doomsday-clock" viewBox="0 0 500 500" role="img" aria-labelledby="doomClockTitle doomClockDesc">
+          <title id="doomClockTitle">Reloj espiral de DoingLio</title>
+          <desc id="doomClockDesc">Una espiral nace en un punto central y se expande hacia afuera. Las agujas marcan las cuatro y diez.</desc>
+          <defs>
+            <linearGradient id="spiralGlow" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#ffd083" stop-opacity=".95"/>
+              <stop offset=".48" stop-color="#dc8623" stop-opacity=".78"/>
+              <stop offset="1" stop-color="#cba45d" stop-opacity=".18"/>
+            </linearGradient>
+          </defs>
+          <circle class="doom-orbit" cx="250" cy="250" r="182"/>
+          <circle class="doom-orbit dash" cx="250" cy="250" r="154"/>
+          <circle class="doom-orbit" cx="250" cy="250" r="112" opacity=".55"/>
+          <g aria-hidden="true">
+            <line class="doom-tick major" x1="250" y1="56" x2="250" y2="72"/>
+            <line class="doom-tick" x1="347" y1="82" x2="339" y2="96"/>
+            <line class="doom-tick major" x1="418" y1="153" x2="404" y2="161"/>
+            <line class="doom-tick" x1="444" y1="250" x2="428" y2="250"/>
+            <line class="doom-tick major" x1="418" y1="347" x2="404" y2="339"/>
+            <line class="doom-tick" x1="347" y1="418" x2="339" y2="404"/>
+            <line class="doom-tick major" x1="250" y1="444" x2="250" y2="428"/>
+            <line class="doom-tick" x1="153" y1="418" x2="161" y2="404"/>
+            <line class="doom-tick major" x1="82" y1="347" x2="96" y2="339"/>
+            <line class="doom-tick" x1="56" y1="250" x2="72" y2="250"/>
+            <line class="doom-tick major" x1="82" y1="153" x2="96" y2="161"/>
+            <line class="doom-tick" x1="153" y1="82" x2="161" y2="96"/>
+          </g>
+          <path class="doom-spiral" d="M250 250
+            C252 244 260 244 264 250
+            C270 260 261 273 248 273
+            C228 273 218 252 225 235
+            C236 209 272 204 294 222
+            C325 247 316 296 283 316
+            C239 343 180 317 166 269
+            C148 208 196 151 258 151
+            C334 151 385 220 366 291
+            C342 379 246 415 171 373
+            C80 322 69 196 140 121
+            C224 32 379 61 443 166"/>
+          <circle class="doom-trail-point" cx="443" cy="166" r="4.4"/>
+          <!-- 4:10: minute hand at 2, hour hand slightly past 4 -->
+          <g transform="rotate(60 250 250)"><line class="doom-hand minute" x1="250" y1="250" x2="250" y2="101"/></g>
+          <g transform="rotate(125 250 250)"><line class="doom-hand hour" x1="250" y1="250" x2="250" y2="145"/></g>
+          <circle class="doom-center-ring" cx="250" cy="250" r="11"/>
+          <circle class="doom-center" cx="250" cy="250" r="4.5"/>
+          <text class="doom-time" x="250" y="473" text-anchor="middle">04:10</text>
+          <text class="doom-label" x="250" y="491" text-anchor="middle">TIEMPO · MEMORIA · EXPANSIÓN</text>
+        </svg>
+      </div>
       <h1>Elegí el sistema<br>que querés <em>activar.</em></h1>
       <p>Cada especialista vive separado. DoingLio es la puerta de entrada.</p>
     </section>
