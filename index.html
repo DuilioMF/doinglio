@@ -85,7 +85,7 @@
         <h2>Capitán Rodolfo</h2>
         <p>Combustible, tanques, surtidores, despachos, ventas y cobros dentro del tablero vivo de la estación.</p>
         <span class="tagline">tanque → surtidor → auto → cobro</span>
-        <span class="meta"><span class="dot"></span>GITHUB PAGES · REPO INDEPENDIENTE</span>
+        <span class="meta" id="capitan-meta"><span class="dot"></span>GITHUB PAGES · REPO INDEPENDIENTE</span>
         <span class="go">ABRIR <b>↗</b></span>
       </a>
 
@@ -104,7 +104,7 @@
         <h2>Ruben</h2>
         <p>Del choque al cierre: presupuesto, autorización, repuestos, reparación, entrega, facturación y cobranza.</p>
         <span class="tagline">siniestro → presupuesto → reparación → entrega</span>
-        <span class="meta"><span class="dot"></span>GITHUB PAGES · WEB INDEPENDIENTE</span>
+        <span class="meta" id="ruben-meta"><span class="dot"></span>GITHUB PAGES · WEB INDEPENDIENTE</span>
         <span class="go">ABRIR <b>↗</b></span>
       </a>
     </section>
@@ -131,13 +131,42 @@
       if(!local) return;
       const capitan=document.getElementById('open-capitan');
       const ruben=document.getElementById('open-ruben');
+      async function readText(url,fallback){
+        try{
+          const r=await fetch(url+'?ts='+Date.now(),{cache:'no-store'});
+          if(r.ok) return (await r.text()).trim();
+        }catch(_){}
+        return fallback;
+      }
+      async function readSqlState(){
+        for(const base of ['http://127.0.0.1:8787','http://localhost:8787']){
+          try{
+            const r=await fetch(base+'/api/state',{cache:'no-store',targetAddressSpace:'local'});
+            if(r.ok) return await r.json();
+          }catch(_){}
+        }
+        return {connected:false};
+      }
       if(capitan){
         capitan.href='./capitan-rodolfo/index.html';
-        capitan.querySelector('.meta').innerHTML='<span class="dot"></span>LOCAL · CAPITÁN RODOLFO';
+        Promise.all([readText('./capitan-rodolfo/VERSION','?'),readSqlState()]).then(([v,state])=>{
+          const meta=document.getElementById('capitan-meta');
+          if(!meta) return;
+          if(state.connected && state.database){
+            meta.innerHTML='<span class="dot"></span>LOCAL · v'+v+' · SQL CONECTADO · '+state.database;
+          }else if(state.connected){
+            meta.innerHTML='<span class="dot"></span>LOCAL · v'+v+' · SQL CONECTADO · ELEGIR BASE';
+          }else{
+            meta.innerHTML='<span class="dot" style="background:#ffb36b;box-shadow:0 0 13px #ffb36b"></span>LOCAL · v'+v+' · SQL SIN CONEXIÓN';
+          }
+        });
       }
       if(ruben){
         ruben.href='./ruben/index.html';
-        ruben.querySelector('.meta').innerHTML='<span class="dot"></span>LOCAL · RUBEN';
+        readText('./ruben/VERSION','?').then(v=>{
+          const meta=document.getElementById('ruben-meta');
+          if(meta) meta.innerHTML='<span class="dot"></span>LOCAL · v'+v;
+        });
       }
     })();
   </script>
