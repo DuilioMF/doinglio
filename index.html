@@ -60,7 +60,7 @@
     </section>
 
     <section class="systems">
-      <a class="card rodolfo" href="https://duiliomf.github.io/capitan-rodolfo/" target="_self">
+      <a class="card rodolfo" id="open-capitan" href="https://duiliomf.github.io/capitan-rodolfo/" target="_self">
         <span class="num">01</span>
         <svg class="blueprint" viewBox="0 0 300 180" aria-hidden="true">
           <circle class="soft" cx="225" cy="90" r="73"/>
@@ -81,7 +81,7 @@
         <span class="go">ABRIR <b>↗</b></span>
       </a>
 
-      <a class="card ruben" href="https://duiliomf.github.io/ruben/" target="_self">
+      <a class="card ruben" id="open-ruben" href="https://duiliomf.github.io/ruben/" target="_self">
         <span class="num">02</span>
         <svg class="blueprint" viewBox="0 0 300 180" aria-hidden="true">
           <circle class="soft" cx="228" cy="88" r="68"/>
@@ -113,6 +113,21 @@
       }catch(e){
         document.getElementById('build-code').textContent = 'D·?';
         console.warn('No se pudo leer BUILD', e);
+      }
+    })();
+
+    (function(){
+      const local = location.hostname === '127.0.0.1' || location.hostname === 'localhost';
+      if(!local) return;
+      const capitan=document.getElementById('open-capitan');
+      const ruben=document.getElementById('open-ruben');
+      if(capitan){
+        capitan.href='./capitan-rodolfo/index.html';
+        capitan.querySelector('.meta').innerHTML='<span class="dot"></span>LOCAL · CAPITÁN RODOLFO';
+      }
+      if(ruben){
+        ruben.href='./ruben/index.html';
+        ruben.querySelector('.meta').innerHTML='<span class="dot"></span>LOCAL · RUBEN';
       }
     })();
   </script>
