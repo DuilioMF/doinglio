@@ -36,6 +36,21 @@ echo [4/5] Iniciando conector SQL de Capitán...
 for /f "tokens=5" %%P in ('netstat -ano ^| findstr /R /C:":%CAPPORT% .*LISTENING"') do taskkill /PID %%P /F >nul 2>nul
 if exist "%CAPDIR%\bridge\capitan_rodolfo_local.ps1" (
   start "Capitan Rodolfo SQL" /min powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%CAPDIR%\bridge\capitan_rodolfo_local.ps1" -AppDir "%CAPDIR%"
+  set "CAPREADY=0"
+  for /L %%I in (1,1,20) do (
+    curl.exe --silent --fail "http://127.0.0.1:%CAPPORT%/health" >nul 2>nul
+    if not errorlevel 1 (
+      set "CAPREADY=1"
+      goto :capready
+    )
+    timeout /t 1 >nul
+  )
+  :capready
+  if "!CAPREADY!"=="1" (
+    echo       Conector SQL de Capitan listo.
+  ) else (
+    echo AVISO: el conector SQL de Capitan no respondio. Podes revisar Nucleo - Datos.
+  )
 ) else (
   echo AVISO: no encontre el bridge de Capitan en %CAPDIR%.
 )
