@@ -34,6 +34,7 @@
     .eyebrow{font-size:8px;letter-spacing:.3em;color:var(--accent)}.card h2{font:600 38px "Cormorant Garamond",serif;margin:11px 0 9px}.card p{max-width:72%;font-size:12px;line-height:1.7;color:#a29c91}
     .meta{position:absolute;left:30px;bottom:22px;font-size:8px;letter-spacing:.16em;color:#aaa398}.dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 13px var(--accent);margin-right:10px}
     .go{position:absolute;right:24px;bottom:19px;font-size:8px;letter-spacing:.18em;color:#bbb4aa}.go b{font-size:20px;color:var(--accent);margin-left:8px}.pending{opacity:.92}.pending .go{color:#7d7770}
+    .local-install{position:relative;z-index:2;width:min(1100px,92vw);margin:0 auto 18px;display:flex;justify-content:center}.local-install a{display:inline-flex;align-items:center;gap:10px;padding:13px 18px;border:1px solid #dc862388;background:#dc862318;color:#ffd09b;text-decoration:none;font-size:11px;font-weight:800;letter-spacing:.08em}.local-install a:hover{border-color:#dc8623;background:#dc86232b}.local-install small{color:#8f887e;font-size:10px;letter-spacing:.04em}
     footer{position:relative;z-index:2;display:flex;justify-content:center;align-items:center;gap:18px;padding:10px 20px 14px;color:#625f59;font-size:7px;letter-spacing:.25em}footer i{width:36px;height:1px;background:#776239}
     @media(min-width:761px) and (max-height:760px){.top{padding:10px 4vw}.mark,.mark img{width:40px;height:40px}.hero{padding:18px 20px 16px}.hero h1{font-size:54px;margin:9px 0}.hero p{font-size:12px}.systems{margin-bottom:10px}.card{min-height:215px;padding:22px 26px}.card h2{font-size:34px}.blueprint{transform:scale(.84);transform-origin:right center}.meta{bottom:16px;left:26px}.go{bottom:13px}footer{padding:6px 15px 10px}}
     @media(max-width:760px){.code{display:none}.hero{padding-top:6vh}.hero h1{font-size:54px}.systems{grid-template-columns:1fr}.card{min-height:300px;padding:30px 25px}.card p{max-width:62%}.meta{left:25px}.blueprint{opacity:.42;right:-28px!important;top:85px!important;transform:scale(.9);transform-origin:right center}}
@@ -57,6 +58,13 @@
       <small>CUADERNO MAESTRO</small>
       <h1>Elegí el sistema<br>que querés <em>activar.</em></h1>
       <p>Cada especialista vive separado. DoingLio es la puerta de entrada.</p>
+    </section>
+
+    <section class="local-install" id="local-install">
+      <a href="INSTALAR_DOINGLIO.bat" download>
+        ⬇ INSTALAR / ABRIR DOINGLIO LOCAL
+        <small>C:\Sistemas\doinglio</small>
+      </a>
     </section>
 
     <section class="systems">
@@ -118,6 +126,8 @@
 
     (function(){
       const local = location.hostname === '127.0.0.1' || location.hostname === 'localhost';
+      const installer=document.getElementById('local-install');
+      if(local && installer) installer.style.display='none';
       if(!local) return;
       const capitan=document.getElementById('open-capitan');
       const ruben=document.getElementById('open-ruben');
