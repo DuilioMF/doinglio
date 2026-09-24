@@ -6,70 +6,86 @@ param(
 $ErrorActionPreference = "Stop"
 $Root = [IO.Path]::GetFullPath($Root)
 
-function Mime([string]$Path){
+function Get-Mime([string]$Path){
   switch ([IO.Path]::GetExtension($Path).ToLowerInvariant()){
-    ".html" { "text/html; charset=utf-8" }
-    ".htm"  { "text/html; charset=utf-8" }
-    ".js"   { "application/javascript; charset=utf-8" }
-    ".css"  { "text/css; charset=utf-8" }
-    ".json" { "application/json; charset=utf-8" }
-    ".svg"  { "image/svg+xml" }
-    ".png"  { "image/png" }
-    ".jpg"  { "image/jpeg" }
-    ".jpeg" { "image/jpeg" }
-    ".gif"  { "image/gif" }
-    ".ico"  { "image/x-icon" }
-    ".txt"  { "text/plain; charset=utf-8" }
-    default { "application/octet-stream" }
+    ".html" { return "text/html; charset=utf-8" }
+    ".htm"  { return "text/html; charset=utf-8" }
+    ".js"   { return "application/javascript; charset=utf-8" }
+    ".css"  { return "text/css; charset=utf-8" }
+    ".json" { return "application/json; charset=utf-8" }
+    ".svg"  { return "image/svg+xml" }
+    ".png"  { return "image/png" }
+    ".jpg"  { return "image/jpeg" }
+    ".jpeg" { return "image/jpeg" }
+    ".gif"  { return "image/gif" }
+    ".ico"  { return "image/x-icon" }
+    ".txt"  { return "text/plain; charset=utf-8" }
+    default { return "application/octet-stream" }
   }
 }
 
-$listener = [System.Net.HttpListener]::new()
-$listener.Prefixes.Add("http://127.0.0.1:$Port/")
+function Send-Response($Stream,[int]$Code,[string]$Type,[byte[]]$Body){
+  $text = switch($Code){200{"OK"}404{"Not Found"}403{"Forbidden"}500{"Internal Server Error"}default{"OK"}}
+  $nl = [Environment]::NewLine
+  $headers = "HTTP/1.1 $Code $text" + $nl +
+             "Content-Type: $Type" + $nl +
+             "Content-Length: $($Body.Length)" + $nl +
+             "Cache-Control: no-store, no-cache, must-revalidate" + $nl +
+             "Connection: close" + $nl + $nl
+  $hb=[Text.Encoding]::ASCII.GetBytes($headers)
+  $Stream.Write($hb,0,$hb.Length)
+  if($Body.Length -gt 0){ $Stream.Write($Body,0,$Body.Length) }
+  $Stream.Flush()
+}
+
+$listener=[Net.Sockets.TcpListener]::new([Net.IPAddress]::Loopback,$Port)
 $listener.Start()
 
-try {
-  while($listener.IsListening){
-    $ctx = $listener.GetContext()
-    try {
-      $path = [Uri]::UnescapeDataString($ctx.Request.Url.AbsolutePath)
+try{
+  while($true){
+    $client=$listener.AcceptTcpClient()
+    try{
+      $stream=$client.GetStream()
+      $reader=New-Object IO.StreamReader($stream,[Text.Encoding]::UTF8,$false,4096,$true)
+      $line=$reader.ReadLine()
+      if([string]::IsNullOrWhiteSpace($line)){ continue }
+      $parts=$line.Split(' ')
+      if($parts.Count -lt 2){ continue }
+      $method=$parts[0]
+      $rawPath=$parts[1]
+      while($true){ $h=$reader.ReadLine(); if($null -eq $h -or $h -eq ''){break} }
+
+      if($method -ne "GET"){
+        Send-Response $stream 403 "text/plain; charset=utf-8" ([Text.Encoding]::UTF8.GetBytes("GET only"))
+        continue
+      }
+
+      $path=($rawPath -split '\?')[0]
       if($path -eq "/_doinglio_health"){
-        $body = [Text.Encoding]::UTF8.GetBytes('{"ok":true,"service":"DoingLio Local Web"}')
-        $ctx.Response.StatusCode = 200
-        $ctx.Response.ContentType = "application/json; charset=utf-8"
-        $ctx.Response.ContentLength64 = $body.Length
-        $ctx.Response.OutputStream.Write($body,0,$body.Length)
-        $ctx.Response.Close()
+        Send-Response $stream 200 "application/json; charset=utf-8" ([Text.Encoding]::UTF8.GetBytes('{"ok":true,"service":"DoingLio Local Web"}'))
         continue
       }
+      if($path -eq "/"){ $path="/index.html" }
 
-      if($path -eq "/"){ $path = "/index.html" }
-      $relative = $path.TrimStart("/") -replace "/","\"
-      $file = [IO.Path]::GetFullPath((Join-Path $Root $relative))
+      $relative=[Uri]::UnescapeDataString($path.TrimStart('/')) -replace '/','\'
+      $file=[IO.Path]::GetFullPath((Join-Path $Root $relative))
       if(-not $file.StartsWith($Root,[StringComparison]::OrdinalIgnoreCase)){
-        $ctx.Response.StatusCode = 403
-        $ctx.Response.Close()
+        Send-Response $stream 403 "text/plain; charset=utf-8" ([Text.Encoding]::UTF8.GetBytes("Forbidden"))
+        continue
+      }
+      if(-not (Test-Path $file -PathType Leaf)){
+        Send-Response $stream 404 "text/plain; charset=utf-8" ([Text.Encoding]::UTF8.GetBytes("Not found"))
         continue
       }
 
-      if(Test-Path $file -PathType Leaf){
-        $bytes = [IO.File]::ReadAllBytes($file)
-        $ctx.Response.StatusCode = 200
-        $ctx.Response.ContentType = Mime $file
-        $ctx.Response.Headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
-        $ctx.Response.ContentLength64 = $bytes.Length
-        $ctx.Response.OutputStream.Write($bytes,0,$bytes.Length)
-      } else {
-        $ctx.Response.StatusCode = 404
-      }
+      $bytes=[IO.File]::ReadAllBytes($file)
+      Send-Response $stream 200 (Get-Mime $file) $bytes
     } catch {
-      try { $ctx.Response.StatusCode = 500 } catch {}
+      try{ Send-Response $stream 500 "text/plain; charset=utf-8" ([Text.Encoding]::UTF8.GetBytes($_.Exception.Message)) }catch{}
     } finally {
-      try { $ctx.Response.Close() } catch {}
+      try{$client.Close()}catch{}
     }
   }
-}
-finally {
+} finally {
   $listener.Stop()
-  $listener.Close()
 }
