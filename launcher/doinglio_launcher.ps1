@@ -152,6 +152,18 @@ try {
   # Copiar el componente SQL desde la misma version de Capitan que acabamos de bajar.
   Copy-Item (Join-Path $BuildRuntime "capitan-rodolfo\bridge\capitan_rodolfo_local.ps1") $Bridge -Force
   Copy-Item (Join-Path $BuildRuntime "capitan-rodolfo\VERSION") $VersionFile -Force
+  # SP descargado en cada apertura. Solo el conector (con credenciales locales)
+  # puede instalarlo si el usuario SQL tiene permiso de esquema.
+  $circuitSource = Join-Path $BuildRuntime "capitan-rodolfo\sql\PA_CapitanRodolfo_CircuitoEstacion.sql"
+  $circuitFolder = Join-Path $Connector "sql"
+  if(Test-Path $circuitSource){
+    New-Item -ItemType Directory -Path $circuitFolder -Force | Out-Null
+    Copy-Item $circuitSource (Join-Path $circuitFolder "PA_CapitanRodolfo_CircuitoEstacion.sql") -Force
+    Log "SP de circuito sincronizado desde GitHub. Instalacion automatica: solo si el usuario SQL cuenta con permisos."
+  } else {
+    Log "ADVERTENCIA: la descarga de Capitan no contiene el SP de circuito"
+  }
+
   if(Test-Path (Join-Path $BuildRuntime "capitan-rodolfo\sp_allowlist.json")){
     Copy-Item (Join-Path $BuildRuntime "capitan-rodolfo\sp_allowlist.json") $Allowlist -Force
   }
@@ -186,7 +198,7 @@ if(-not $CI){
       $bridgeErr = Join-Path $Connector "bridge.err.log"
       $bridgeProcess = Start-Process -FilePath "powershell.exe" -WindowStyle Hidden -PassThru -ArgumentList @(
         "-NoProfile","-ExecutionPolicy","Bypass","-File",$Bridge,"-AppDir",$Connector,"-BackgroundChild"
-      ) -RedirectStandardOutput $bridgeOut -RedirectStandardError $bridgeErr | Out-Null
+      ) -RedirectStandardOutput $bridgeOut -RedirectStandardError $bridgeErr
       Log ("Conector SQL v"+$ExpectedConnectorVersion+" lanzado PID="+$bridgeProcess.Id+"; esperando health. stdout="+$bridgeOut+" stderr="+$bridgeErr)
     } catch {
       Log ("ERROR lanzando SQL: " + $_.Exception.Message)
