@@ -144,7 +144,7 @@ function Proxy-Sql($Stream,$Request){
  try{
   $req=[Net.HttpWebRequest]::Create($target)
   $req.Method=$Request.method
-  $proxyTimeout=if($path -in @('/api/circuit/install','/api/circuit/admin-install')){120000}else{20000}
+  $proxyTimeout=if($path -in @('/api/circuit/install','/api/circuit/admin-install')){120000} elseif($path -in @('/api/station/payments','/api/station/payment-cards','/api/station/payment-evidence')){90000} else {20000}
   $req.Timeout=$proxyTimeout
   $req.ReadWriteTimeout=$proxyTimeout
   $req.AllowAutoRedirect=$false
