@@ -1,77 +1,160 @@
-$ErrorActionPreference = "SilentlyContinue"
+$ErrorActionPreference = "Stop"
 $ProgressPreference = "SilentlyContinue"
 
 $Root = "C:\Sistemas\DoingLioLauncher"
+$Runtime = "C:\Sistemas\DoingLioRuntime"
+$BuildRuntime = "C:\Sistemas\DoingLioRuntime.new"
 $Connector = "C:\Sistemas\DoingLioConnector"
 $BridgeDir = Join-Path $Connector "bridge"
 $Bridge = Join-Path $BridgeDir "capitan_rodolfo_local.ps1"
 $VersionFile = Join-Path $Connector "VERSION"
 $Allowlist = Join-Path $Connector "sp_allowlist.json"
+$ServerScript = Join-Path $Root "doinglio_web_server.ps1"
+$WebPidFile = Join-Path $Root "web.pid"
+$WebPortFile = Join-Path $Root "web.port"
 $Log = Join-Path $Root "launcher.log"
-$Cloud = "https://duiliomf.github.io/doinglio/?desktop=1&build=18"
-$CapRaw = "https://raw.githubusercontent.com/DuilioMF/capitan-rodolfo/main"
+$CI = ($env:DOINGLIO_CI -eq "1")
 
 New-Item -ItemType Directory -Force -Path $Root,$Connector,$BridgeDir | Out-Null
-Add-Content -Path $Log -Value ("["+(Get-Date).ToString("s")+"] Inicio DoingLio D17")
+Add-Content -Path $Log -Value ("["+(Get-Date).ToString("s")+"] Inicio DoingLio D19")
 
-# 1) Abrir la pagina primero. La interfaz siempre viene de la nube.
-Start-Process $Cloud
-
-function Test-DoingLioConnector {
-    $ports = @(8787,8797,18787,27877,37877,48787,57877)
-    foreach($p in $ports){
-        try {
-            $client = New-Object System.Net.Sockets.TcpClient
-            $ar = $client.BeginConnect("127.0.0.1",$p,$null,$null)
-            if($ar.AsyncWaitHandle.WaitOne(120)){
-                $client.EndConnect($ar)
-                $client.Close()
-                try {
-                    $health = Invoke-RestMethod -Uri ("http://127.0.0.1:"+$p+"/health") -TimeoutSec 1
-                    if($health.ok -and $health.service -eq "Capitan Rodolfo Local"){
-                        return $p
-                    }
-                } catch {}
-            } else {
-                $client.Close()
-            }
-        } catch {}
-    }
-    return $null
+function Log([string]$Message){
+  Add-Content -Path $Log -Value ("["+(Get-Date).ToString("s")+"] "+$Message)
 }
 
-# 2) Si ya esta activo, no arrancar otro.
-$active = Test-DoingLioConnector
-if($active){
-    Add-Content -Path $Log -Value ("["+(Get-Date).ToString("s")+"] SQL ya activo puerto "+$active)
-    exit 0
+function Download-Text([string]$Url,[string]$OutFile){
+  Invoke-WebRequest -UseBasicParsing -Uri $Url -OutFile $OutFile -TimeoutSec 30
 }
 
-# 3) Actualizar solo el componente local SQL. Nunca se instala la pagina.
-try {
-    Invoke-WebRequest -UseBasicParsing ($CapRaw+"/bridge/capitan_rodolfo_local.ps1?ts="+[DateTime]::UtcNow.Ticks) -OutFile $Bridge
-    Invoke-WebRequest -UseBasicParsing ($CapRaw+"/VERSION?ts="+[DateTime]::UtcNow.Ticks) -OutFile $VersionFile
-    Invoke-WebRequest -UseBasicParsing ($CapRaw+"/sp_allowlist.json?ts="+[DateTime]::UtcNow.Ticks) -OutFile $Allowlist
-    Add-Content -Path $Log -Value ("["+(Get-Date).ToString("s")+"] Componente SQL actualizado")
-} catch {
-    Add-Content -Path $Log -Value ("["+(Get-Date).ToString("s")+"] No se pudo actualizar SQL: "+$_.Exception.Message)
+function Expand-Repo([string]$Repo,[string]$Destination,[string]$Work){
+  $zip = Join-Path $Work ($Repo + ".zip")
+  $extract = Join-Path $Work ($Repo + "_extract")
+  if(Test-Path $extract){ Remove-Item $extract -Recurse -Force }
+  New-Item -ItemType Directory -Force -Path $extract | Out-Null
+  $url = "https://github.com/DuilioMF/$Repo/archive/refs/heads/main.zip"
+  Invoke-WebRequest -UseBasicParsing -Uri $url -OutFile $zip -TimeoutSec 60
+  Expand-Archive -Path $zip -DestinationPath $extract -Force
+  $source = Get-ChildItem -Path $extract -Directory | Select-Object -First 1
+  if($null -eq $source){ throw "No pude extraer $Repo" }
+  New-Item -ItemType Directory -Force -Path $Destination | Out-Null
+  Copy-Item -Path (Join-Path $source.FullName "*") -Destination $Destination -Recurse -Force
 }
 
-# 4) Arrancar oculto y salir. No esperar al SQL.
-if(Test-Path $Bridge){
+function Stop-PreviousWeb {
+  if(Test-Path $WebPidFile){
     try {
-        Start-Process -FilePath "powershell.exe" -WindowStyle Hidden -ArgumentList @(
-            "-NoProfile",
-            "-ExecutionPolicy","Bypass",
-            "-File",$Bridge,
-            "-AppDir",$Connector,
-            "-BackgroundChild"
-        )
-        Add-Content -Path $Log -Value ("["+(Get-Date).ToString("s")+"] SQL lanzado en segundo plano")
-    } catch {
-        Add-Content -Path $Log -Value ("["+(Get-Date).ToString("s")+"] Error al lanzar SQL: "+$_.Exception.Message)
-    }
-} else {
-    Add-Content -Path $Log -Value ("["+(Get-Date).ToString("s")+"] Falta bridge local")
+      $oldPid = [int](Get-Content $WebPidFile -Raw).Trim()
+      $p = Get-Process -Id $oldPid -ErrorAction SilentlyContinue
+      if($p){ Stop-Process -Id $oldPid -Force -ErrorAction SilentlyContinue }
+    } catch {}
+  }
+  Remove-Item $WebPidFile,$WebPortFile -Force -ErrorAction SilentlyContinue
 }
+
+function Get-FreePort {
+  foreach($p in @(8790,8791,18790,27890,37890)){
+    try {
+      $t=[Net.Sockets.TcpListener]::new([Net.IPAddress]::Loopback,$p)
+      $t.Start()
+      $t.Stop()
+      return $p
+    } catch {}
+  }
+  throw "No encontré un puerto local libre para DoingLio."
+}
+
+function Test-Connector {
+  foreach($p in @(8787,8797,18787,27877,37877,48787,57877)){
+    try {
+      $r=Invoke-RestMethod -Uri ("http://127.0.0.1:"+$p+"/health") -TimeoutSec 1
+      if($r.ok -and $r.service -eq "Capitan Rodolfo Local"){ return $p }
+    } catch {}
+  }
+  return $null
+}
+
+# 1. Descargar SIEMPRE la ultima pagina y especialistas en una carpeta nueva.
+$work = Join-Path $env:TEMP ("doinglio_" + [guid]::NewGuid().ToString("N"))
+New-Item -ItemType Directory -Force -Path $work | Out-Null
+try {
+  if(Test-Path $BuildRuntime){ Remove-Item $BuildRuntime -Recurse -Force }
+  New-Item -ItemType Directory -Force -Path $BuildRuntime | Out-Null
+
+  Log "Descargando DoingLio main"
+  Expand-Repo -Repo "doinglio" -Destination $BuildRuntime -Work $work
+  Log "Descargando Capitan Rodolfo"
+  Expand-Repo -Repo "capitan-rodolfo" -Destination (Join-Path $BuildRuntime "capitan-rodolfo") -Work $work
+  Log "Descargando Ruben"
+  Expand-Repo -Repo "ruben" -Destination (Join-Path $BuildRuntime "ruben") -Work $work
+
+  # Copiar el componente SQL desde la misma version de Capitan que acabamos de bajar.
+  Copy-Item (Join-Path $BuildRuntime "capitan-rodolfo\bridge\capitan_rodolfo_local.ps1") $Bridge -Force
+  Copy-Item (Join-Path $BuildRuntime "capitan-rodolfo\VERSION") $VersionFile -Force
+  if(Test-Path (Join-Path $BuildRuntime "capitan-rodolfo\sp_allowlist.json")){
+    Copy-Item (Join-Path $BuildRuntime "capitan-rodolfo\sp_allowlist.json") $Allowlist -Force
+  }
+
+  # Actualizar el servidor local desde GitHub.
+  Download-Text "https://raw.githubusercontent.com/DuilioMF/doinglio/main/launcher/doinglio_web_server.ps1" $ServerScript
+
+  Stop-PreviousWeb
+
+  if(Test-Path $Runtime){ Remove-Item $Runtime -Recurse -Force }
+  Move-Item $BuildRuntime $Runtime
+  Log "Pagina local actualizada"
+}
+catch {
+  Log ("ERROR actualizando pagina: " + $_.Exception.Message)
+  if(Test-Path $BuildRuntime){ Remove-Item $BuildRuntime -Recurse -Force -ErrorAction SilentlyContinue }
+  if(-not (Test-Path (Join-Path $Runtime "index.html"))){ throw }
+}
+finally {
+  Remove-Item $work -Recurse -Force -ErrorAction SilentlyContinue
+}
+
+# 2. Levantar la conexion SQL local, sin bloquear.
+if(-not $CI){
+  $connectorPort = Test-Connector
+  if(-not $connectorPort -and (Test-Path $Bridge)){
+    try {
+      Start-Process -FilePath "powershell.exe" -WindowStyle Hidden -ArgumentList @(
+        "-NoProfile","-ExecutionPolicy","Bypass","-File",$Bridge,"-AppDir",$Connector,"-BackgroundChild"
+      ) | Out-Null
+      Log "Conector SQL lanzado"
+    } catch {
+      Log ("ERROR lanzando SQL: " + $_.Exception.Message)
+    }
+  } elseif($connectorPort) {
+    Log ("Conector SQL ya activo puerto " + $connectorPort)
+  }
+}
+
+# 3. Servir la copia local actualizada.
+$webPort = Get-FreePort
+$web = Start-Process -FilePath "powershell.exe" -WindowStyle Hidden -PassThru -ArgumentList @(
+  "-NoProfile","-ExecutionPolicy","Bypass","-File",$ServerScript,"-Root",$Runtime,"-Port",$webPort
+)
+[IO.File]::WriteAllText($WebPidFile,[string]$web.Id)
+[IO.File]::WriteAllText($WebPortFile,[string]$webPort)
+
+$ready=$false
+for($i=0;$i -lt 20;$i++){
+  Start-Sleep -Milliseconds 150
+  try {
+    $h=Invoke-RestMethod -Uri ("http://127.0.0.1:"+$webPort+"/_doinglio_health") -TimeoutSec 1
+    if($h.ok){ $ready=$true; break }
+  } catch {}
+}
+if(-not $ready){
+  try{ Stop-Process -Id $web.Id -Force }catch{}
+  throw "La pagina local no pudo iniciar."
+}
+Log ("Web local lista en puerto " + $webPort)
+
+if($CI){
+  try{ Stop-Process -Id $web.Id -Force }catch{}
+  exit 0
+}
+
+Start-Process ("http://127.0.0.1:"+$webPort+"/?desktop=1")
 exit 0
