@@ -1,102 +1,60 @@
 @echo off
 setlocal EnableExtensions EnableDelayedExpansion
-title DoingLio local
+title DoingLio
 
-for %%I in ("%~dp0.") do set "APPROOT=%%~fI"
-set "CAPDIR=%APPROOT%\capitan-rodolfo"
-set "RUBENDIR=%APPROOT%\ruben"
-set "WEBPORT=8790"
-set "CAPPORT=8787"
+set "CONNECTOR=C:\Sistemas\DoingLioConnector"
+set "BRIDGEDIR=%CONNECTOR%\bridge"
+set "BRIDGE=%BRIDGEDIR%\capitan_rodolfo_local.ps1"
+set "VERSION_FILE=%CONNECTOR%\VERSION"
+set "ALLOWLIST=%CONNECTOR%\sp_allowlist.json"
+set "LOG=%CONNECTOR%\doinglio_start.log"
+set "CAPRAW=https://raw.githubusercontent.com/DuilioMF/capitan-rodolfo/main"
+set "CLOUD=https://duiliomf.github.io/doinglio/?desktop=1"
+
+if not exist "C:\Sistemas" mkdir "C:\Sistemas" >nul 2>nul
+if not exist "%CONNECTOR%" mkdir "%CONNECTOR%" >nul 2>nul
+if not exist "%BRIDGEDIR%" mkdir "%BRIDGEDIR%" >nul 2>nul
+
+> "%LOG%" echo [%date% %time%] Inicio DoingLio
 
 echo.
 echo ============================================================
-echo                    DOINGLIO LOCAL
+echo                         DOINGLIO
 echo ============================================================
-echo Carpeta: %APPROOT%
 echo.
-
-where git >nul 2>nul
+echo [1/3] Actualizando conector SQL...
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Stop'; Invoke-WebRequest -UseBasicParsing '%CAPRAW%/bridge/capitan_rodolfo_local.ps1' -OutFile '%BRIDGE%'; Invoke-WebRequest -UseBasicParsing '%CAPRAW%/VERSION' -OutFile '%VERSION_FILE%'; Invoke-WebRequest -UseBasicParsing '%CAPRAW%/sp_allowlist.json' -OutFile '%ALLOWLIST%'" >>"%LOG%" 2>&1
 if errorlevel 1 (
-  echo ERROR: Git no esta instalado o no esta en PATH.
-  pause
-  exit /b 1
+  echo AVISO: no pude actualizar el conector. Intento usar la copia existente.
 )
 
-echo [1/5] Actualizando DoingLio...
-git -C "%APPROOT%" pull --ff-only
-if errorlevel 1 echo AVISO: DoingLio no pudo hacer pull. Se conserva la copia local.
+set "ACTIVE_PORT="
+for /f "delims=" %%Q in ('powershell -NoProfile -ExecutionPolicy Bypass -Command "$ports=8787,8797,18787,27877,37877,48787,57877; foreach($p in $ports){ try{$r=Invoke-RestMethod -Uri ('http://127.0.0.1:'+ $p +'/health') -TimeoutSec 1; if($r.ok){Write-Output $p; break}}catch{}}"') do set "ACTIVE_PORT=%%Q"
 
-echo [2/5] Actualizando Capitán Rodolfo...
-call :sync_repo "%CAPDIR%" "https://github.com/DuilioMF/capitan-rodolfo.git"
-
-echo [3/5] Actualizando Ruben...
-call :sync_repo "%RUBENDIR%" "https://github.com/DuilioMF/ruben.git"
-
-echo [4/5] Iniciando conector SQL de Capitán...
-for /f "tokens=5" %%P in ('netstat -ano ^| findstr /R /C:":%CAPPORT% .*LISTENING"') do taskkill /PID %%P /F >nul 2>nul
-if exist "%CAPDIR%\bridge\capitan_rodolfo_local.ps1" (
-  start "Capitan Rodolfo SQL" /min powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%CAPDIR%\bridge\capitan_rodolfo_local.ps1" -AppDir "%CAPDIR%"
-  call :wait_capitan
-  if "!CAPREADY!"=="1" (
-    echo       Conector SQL de Capitan listo.
-  ) else (
-    echo AVISO: el conector SQL de Capitan no respondio. Podes revisar Nucleo - Datos.
+if not defined ACTIVE_PORT (
+  echo [2/3] Iniciando acceso a SQL Server...
+  if exist "%BRIDGE%" (
+    start "" powershell.exe -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File "%BRIDGE%" -AppDir "%CONNECTOR%"
+    for /L %%I in (1,1,20) do (
+      if not defined ACTIVE_PORT (
+        for /f "delims=" %%Q in ('powershell -NoProfile -ExecutionPolicy Bypass -Command "$ports=8787,8797,18787,27877,37877,48787,57877; foreach($p in $ports){ try{$r=Invoke-RestMethod -Uri ('http://127.0.0.1:'+ $p +'/health') -TimeoutSec 1; if($r.ok){Write-Output $p; break}}catch{}}"') do set "ACTIVE_PORT=%%Q"
+        if not defined ACTIVE_PORT timeout /t 1 >nul
+      )
+    )
   )
 ) else (
-  echo AVISO: no encontre el bridge de Capitan en %CAPDIR%.
+  echo [2/3] Conector SQL ya estaba activo.
 )
 
-echo [5/5] Iniciando DoingLio web local...
-set "PY="
-where py >nul 2>nul
-if not errorlevel 1 set "PY=py"
-if not defined PY (
-  where python >nul 2>nul
-  if not errorlevel 1 set "PY=python"
-)
-if not defined PY (
-  echo ERROR: No encuentro Python para servir DoingLio local.
-  pause
-  exit /b 1
+if defined ACTIVE_PORT (
+  echo [%date% %time%] Conector activo puerto !ACTIVE_PORT! >>"%LOG%"
+  echo       SQL local disponible.
+) else (
+  echo [%date% %time%] AVISO: conector SQL no respondio >>"%LOG%"
+  echo       AVISO: la pagina va a abrir, pero el SQL puede figurar desconectado.
 )
 
-for /f "tokens=5" %%P in ('netstat -ano ^| findstr /R /C:":%WEBPORT% .*LISTENING"') do taskkill /PID %%P /F >nul 2>nul
-start "DoingLio Web Local" /min %PY% -m http.server %WEBPORT% --bind 127.0.0.1 --directory "%APPROOT%"
-
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$ok=$false;1..15|%%{try{$r=Invoke-WebRequest -UseBasicParsing 'http://127.0.0.1:%WEBPORT%/BUILD' -TimeoutSec 1;if($r.StatusCode -eq 200){$ok=$true;break}}catch{};Start-Sleep -Milliseconds 400};if(-not $ok){exit 1}"
-if errorlevel 1 (
-  echo ERROR: DoingLio local no respondio en el puerto %WEBPORT%.
-  pause
-  exit /b 1
-)
-
-start "" "http://127.0.0.1:%WEBPORT%/"
-exit /b 0
-
-:wait_capitan
-set "CAPREADY=0"
-for /L %%I in (1,1,20) do (
-  if "!CAPREADY!"=="0" (
-    curl.exe --silent --fail "http://127.0.0.1:%CAPPORT%/health" >nul 2>nul
-    if not errorlevel 1 set "CAPREADY=1"
-    if "!CAPREADY!"=="0" timeout /t 1 >nul
-  )
-)
-exit /b 0
-
-:sync_repo
-set "TARGET=%~1"
-set "REMOTE=%~2"
-if exist "%TARGET%\.git" (
-  git -C "%TARGET%" pull --ff-only
-  if errorlevel 1 echo AVISO: no se pudo actualizar %TARGET%; se conserva la copia local.
-  exit /b 0
-)
-if exist "%TARGET%" (
-  echo AVISO: %TARGET% existe pero no es un repositorio Git.
-  echo        No la borro ni la piso. Renombrala o movela para que DoingLio pueda clonarla.
-  exit /b 0
-)
-git clone "%REMOTE%" "%TARGET%"
-if errorlevel 1 echo ERROR: no se pudo clonar %REMOTE%.
+echo [3/3] Abriendo DoingLio en la nube...
+start "" "%CLOUD%"
+timeout /t 1 >nul
 exit /b 0
