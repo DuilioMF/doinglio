@@ -86,11 +86,28 @@ function Get-FreePort {
   throw "No encontré un puerto local libre para DoingLio."
 }
 
+$ConnectorServiceStatusPath = "C:\Sistemas\DoingLio\data\capitan\estado.json"
+function Get-ConnectorCandidatePorts {
+  # El conector guarda el puerto REAL que eligio Windows en estado.json.
+  $ports = @()
+  if(Test-Path $ConnectorServiceStatusPath){
+    try{
+      $st=Get-Content $ConnectorServiceStatusPath -Raw | ConvertFrom-Json
+      $actual=0
+      if([int]::TryParse([string]$st.port,[ref]$actual) -and $actual -ge 1024 -and $actual -le 65535){
+        $ports += $actual
+      }
+    }catch{Log ("No se pudo leer puerto de conector: " + $_.Exception.Message)}
+  }
+  $ports += @(8787,8797,18787,27877,37877,48787,57877)
+  return @($ports | Select-Object -Unique)
+}
 function Test-Connector {
-  foreach($p in @(8787,8797,18787,27877,37877,48787,57877)){
+  foreach($p in @(Get-ConnectorCandidatePorts)){
     try {
       $r=Invoke-RestMethod -Uri ("http://127.0.0.1:"+$p+"/health") -TimeoutSec 1
-      if($r.ok -and $r.service -eq "Capitan Rodolfo Local" -and [string]$r.version -eq $ExpectedConnectorVersion -and $r.apiSqlObject -eq $true){ return $p }
+      if($r.ok -and $r.service -eq "Capitan Rodolfo Local" -and
+         [string]$r.version -eq $ExpectedConnectorVersion -and $r.apiSqlObject -eq $true){ return $p }
     } catch {}
   }
   return $null
@@ -115,7 +132,7 @@ try {
   $NewConnectorVersion = (Get-Content (Join-Path $BuildRuntime "capitan-rodolfo\VERSION") -Raw).Trim()
   if(-not $CI){
     $oldRunning = $false
-    foreach($port in @(8787,8797,18787,27877,37877,48787,57877)){
+    foreach($port in @(Get-ConnectorCandidatePorts)){
       try {
         $h=Invoke-RestMethod -Uri ("http://127.0.0.1:"+$port+"/health") -TimeoutSec 1
         if($h.ok -and $h.service -eq "Capitan Rodolfo Local" -and
