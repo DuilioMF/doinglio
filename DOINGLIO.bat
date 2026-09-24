@@ -3,21 +3,21 @@ setlocal EnableExtensions
 set "ROOT=C:\Sistemas\DoingLioLauncher"
 set "LAUNCHER=%ROOT%\doinglio_launcher.ps1"
 set "RAW=https://raw.githubusercontent.com/DuilioMF/doinglio/main/launcher/doinglio_launcher.ps1"
-set "CLOUD=https://duiliomf.github.io/doinglio/?desktop=1&build=18"
 
 if not exist "C:\Sistemas" mkdir "C:\Sistemas" >nul 2>nul
 if not exist "%ROOT%" mkdir "%ROOT%" >nul 2>nul
 
-powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='SilentlyContinue'; try { Invoke-WebRequest -UseBasicParsing -Uri '%RAW%?v=18' -OutFile '%LAUNCHER%' } catch {}"
-
-if /I "%DOINGLIO_CI%"=="1" (
-  if exist "%LAUNCHER%" exit /b 0
+powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Stop'; Invoke-WebRequest -UseBasicParsing -Uri '%RAW%' -OutFile '%LAUNCHER%'"
+if errorlevel 1 (
+  echo No pude actualizar el arrancador de DoingLio.
+  pause
   exit /b 1
 )
 
-if exist "%LAUNCHER%" (
-  start "" powershell.exe -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File "%LAUNCHER%"
-) else (
-  start "" "%CLOUD%"
+if /I "%DOINGLIO_CI%"=="1" (
+  powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%LAUNCHER%"
+  exit /b %errorlevel%
 )
+
+start "" powershell.exe -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File "%LAUNCHER%"
 exit /b 0
