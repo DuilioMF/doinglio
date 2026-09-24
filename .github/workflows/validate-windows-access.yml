@@ -56,12 +56,12 @@ jobs:
           foreach($path in $paths){
             $tokens=$null; $errors=$null
             [Management.Automation.Language.Parser]::ParseFile($path,[ref]$tokens,[ref]$errors)|Out-Null
-            if($errors.Count){$errors|ForEach-Object{Write-Host $_.Message};throw "PowerShell invalido: $path"}
+            if($errors.Count){$errors|Select-Object -First 5|ForEach-Object{Write-Host ("Linea "+$_.Extent.StartLineNumber+" Col "+$_.Extent.StartColumnNumber+": "+$_.Message+" TEXTO: "+$_.Extent.Text)};throw "PowerShell invalido: $path"}
             Write-Host "PowerShell correcto: $path"
           }
           @'
           const fs=require('fs'),cp=require('child_process'),path=require('path');
-          const roots=['./index.html','./capitan-rodolfo/index.html','./capitan-rodolfo/nucleo.html','./capitan-rodolfo/conexion-sql.html','./capitan-rodolfo/mapa-vivo.html'];
+          const roots=['C:/Sistemas/DoingLioRuntime/index.html','C:/Sistemas/DoingLioRuntime/capitan-rodolfo/index.html','C:/Sistemas/DoingLioRuntime/capitan-rodolfo/nucleo.html','C:/Sistemas/DoingLioRuntime/capitan-rodolfo/conexion-sql.html','C:/Sistemas/DoingLioRuntime/capitan-rodolfo/mapa-vivo.html'];
           for(const filename of roots){
             const html=fs.readFileSync(filename,'utf8');
             const matches=[...html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)];
