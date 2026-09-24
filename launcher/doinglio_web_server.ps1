@@ -63,14 +63,55 @@ function Receive-Request($Stream){
  }
  return [pscustomobject]@{method=$start[0];path=$start[1];headers=$headers;body=$body}
 }
-function Proxy-Sql($Stream,$Request){
- if(-not (Test-Path $ConnectorState)){
-  Send-Json $Stream 503 @{ok=$false;error='No hay informacion de arranque del conector. Abri DoingLio desde el escritorio.'};return
+function Read-ConnectorSafeDiagnostic {
+ $expected=''
+ $expectedPath=Join-Path $Root 'capitan-rodolfo\VERSION'
+ try {if(Test-Path $expectedPath){$expected=(Get-Content $expectedPath -Raw).Trim()}}catch{}
+ $detail=@{expectedVersion=$expected;serviceState='sin estado';serviceVersion='';serviceError='';launcherLog='C:\Sistemas\DoingLioLauncher\launcher.log';bridgeErrorLog='C:\Sistemas\DoingLioConnector\bridge.err.log'}
+ $file='C:\Sistemas\DoingLio\data\capitan\estado.json'
+ if(Test-Path $file){
+  try {
+   $st=Get-Content $file -Raw|ConvertFrom-Json
+   $detail.serviceState=[string]$st.state
+   $detail.serviceVersion=[string]$st.version
+   if($st.error){
+    $message=[string]$st.error
+    if($message -match '(?i)password|contrase.a|bearer|token|api.key|secret|sk-'){ $message='Ver estado.json local para diagnóstico protegido' }
+    $detail.serviceError=$message.Substring(0,[Math]::Min(250,$message.Length))
+   }
+  } catch {$detail.serviceState='No se puede leer estado.json'}
  }
- try{$state=Get-Content -Path $ConnectorState -Raw | ConvertFrom-Json}
- catch{Send-Json $Stream 503 @{ok=$false;error='No pude leer el estado del conector local.'};return}
- if(-not $state.ok -or -not $state.port){
-  Send-Json $Stream 503 @{ok=$false;error='El conector SQL no arranco. Revisar C:\Sistemas\DoingLioConnector\bridge.err.log y launcher.log.'};return
+ return $detail
+}
+function Find-ReadyConnector {
+ # Recuperación si la instancia tarda más que el launcher. No se aceptan
+ # puertos de otra app ni versiones antiguas.
+ $d=Read-ConnectorSafeDiagnostic
+ if([string]::IsNullOrWhiteSpace($d.expectedVersion)){return $null}
+ foreach($port in @(8787,8797,18787,27877,37877,48787,57877)){
+  try{
+   $h=Invoke-RestMethod -Uri ("http://127.0.0.1:"+$port+"/health") -TimeoutSec 1
+   if($h.ok -and $h.service -eq 'Capitan Rodolfo Local' -and
+      [string]$h.version -eq [string]$d.expectedVersion -and $h.apiSqlObject -eq $true){
+    $found=@{ok=$true;port=[int]$port;version=[string]$d.expectedVersion;updatedAt=(Get-Date).ToString('o')}
+    $found | ConvertTo-Json | Set-Content -Path $ConnectorState -Encoding UTF8
+    return $found
+   }
+  }catch{}
+ }
+ return $null
+}
+function Proxy-Sql($Stream,$Request){
+ $state=$null
+ if(Test-Path $ConnectorState){
+  try{$state=Get-Content -Path $ConnectorState -Raw | ConvertFrom-Json}catch{}
+ }
+ if(-not $state -or -not $state.ok -or -not $state.port){
+  $state=Find-ReadyConnector
+ }
+ if(-not $state -or -not $state.ok -or -not $state.port){
+  $diag=Read-ConnectorSafeDiagnostic
+  Send-Json $Stream 503 @{ok=$false;error='El conector SQL no esta activo. Revisá el diagnóstico local; se reintenta descubrir el servicio automáticamente.';diagnostic=$diag};return
  }
  $sqlPort=[int]$state.port
  if(@(8787,8797,18787,27877,37877,48787,57877) -notcontains $sqlPort){
@@ -127,6 +168,10 @@ try{
    $path=($req.path -split '\?')[0]
    if($path -eq '/_doinglio_health'){
      Send-Json $stream 200 @{ok=$true;service='DoingLio Local';port=$Port;connectorStateFile=$ConnectorState};continue
+   }
+   if($path -eq '/_doinglio_diagnostic'){
+     Send-Json $stream 200 (Read-ConnectorSafeDiagnostic)
+     continue
    }
    if($path -eq '/'){$path='/index.html'}
    $relative=[Uri]::UnescapeDataString($path.TrimStart('/')) -replace '/','\'
