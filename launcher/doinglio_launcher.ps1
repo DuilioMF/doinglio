@@ -16,7 +16,7 @@ $Log = Join-Path $Root "launcher.log"
 $CI = ($env:DOINGLIO_CI -eq "1")
 
 New-Item -ItemType Directory -Force -Path $Root,$Connector,$BridgeDir | Out-Null
-Add-Content -Path $Log -Value ("["+(Get-Date).ToString("s")+"] Inicio DoingLio D19")
+Add-Content -Path $Log -Value ("["+(Get-Date).ToString("s")+"] Inicio DoingLio D20")
 
 function Log([string]$Message){
   Add-Content -Path $Log -Value ("["+(Get-Date).ToString("s")+"] "+$Message)
@@ -112,7 +112,7 @@ finally {
   Remove-Item $work -Recurse -Force -ErrorAction SilentlyContinue
 }
 
-# 2. Levantar la conexion SQL local, sin bloquear.
+# 2. Levantar la conexion SQL local y esperar a que responda /health.
 if(-not $CI){
   $connectorPort = Test-Connector
   if(-not $connectorPort -and (Test-Path $Bridge)){
@@ -120,12 +120,24 @@ if(-not $CI){
       Start-Process -FilePath "powershell.exe" -WindowStyle Hidden -ArgumentList @(
         "-NoProfile","-ExecutionPolicy","Bypass","-File",$Bridge,"-AppDir",$Connector,"-BackgroundChild"
       ) | Out-Null
-      Log "Conector SQL lanzado"
+      Log "Conector SQL lanzado; esperando health"
     } catch {
       Log ("ERROR lanzando SQL: " + $_.Exception.Message)
     }
-  } elseif($connectorPort) {
-    Log ("Conector SQL ya activo puerto " + $connectorPort)
+  }
+
+  if(-not $connectorPort){
+    for($i=0;$i -lt 30;$i++){
+      Start-Sleep -Milliseconds 500
+      $connectorPort = Test-Connector
+      if($connectorPort){ break }
+    }
+  }
+
+  if($connectorPort){
+    Log ("Conector SQL listo puerto " + $connectorPort)
+  } else {
+    Log "ERROR: el conector SQL no respondio /health luego de 15 segundos"
   }
 }
 
