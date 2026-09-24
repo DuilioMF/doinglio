@@ -202,7 +202,7 @@
         return fallback;
       }
       async function readSqlState(){
-        for(const base of ['http://127.0.0.1:8787','http://localhost:8787']){
+        for(const base of ['http://127.0.0.1:8787','http://localhost:8787','http://127.0.0.1:8797','http://localhost:8797','http://127.0.0.1:18787','http://localhost:18787','http://127.0.0.1:27877','http://localhost:27877','http://127.0.0.1:37877','http://localhost:37877','http://127.0.0.1:48787','http://localhost:48787','http://127.0.0.1:57877','http://localhost:57877']){
           try{
             const r=await fetch(base+'/api/state',{cache:'no-store',targetAddressSpace:'local'});
             if(r.ok) return await r.json();
