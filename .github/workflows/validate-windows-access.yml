@@ -27,6 +27,12 @@ jobs:
           if($link.IconLocation -notmatch "brain-davinci.ico"){throw "Icono cerebral no configurado"}
           if(!(Test-Path "C:\Sistemas\DoingLioLauncher\brain-davinci.ico")){throw "Falta ICO"}
           if(!(Test-Path "C:\Sistemas\DoingLioLauncher\DoingLioInicio.vbs")){throw "Falta VBS"}
+          $splash="C:\Sistemas\DoingLioLauncher\reloj_inicio.hta"
+          if(!(Test-Path $splash)){throw "Falta reloj de inicio"}
+          $hta=Get-Content $splash -Raw
+          if($hta -notmatch 'doomsday-clock-bg' -or $hta -notmatch 'DoingLio'){throw "Reloj incompatible"}
+          if((Get-Content "C:\Sistemas\DoingLioLauncher\DoingLioInicio.vbs" -Raw) -notmatch 'mshta.exe'){throw "El acceso no abre el reloj"}
+
           Write-Host "Acceso directo e icono OK"
       - name: Verificar instalador y arrancador de escritorio
         shell: powershell
@@ -43,7 +49,12 @@ jobs:
             "C:\Sistemas\DoingLioRuntime\ruben\VERSION"
           )
           foreach($path in $paths){if(!(Test-Path $path)){throw "Falta $path"}}
-          Write-Host "Runtime local OK"
+          $installer="C:\Sistemas\DoingLioConnector\sql\PA_CapitanRodolfo_CircuitoEstacion.sql"
+          if(!(Test-Path $installer)){throw "El SP no se sincronizo con el conector"}
+          if(!(Get-Content $installer -Raw).Contains('ALTER PROCEDURE dbo.PA_CapitanRodolfo_CircuitoEstacion')){
+              throw "Archivo del SP incompleto"
+          }
+          Write-Host "Runtime local y SP de circuito sincronizado OK"
       - name: Validar sintaxis PowerShell y JavaScript
         shell: powershell
         run: |
@@ -126,14 +137,16 @@ jobs:
           const http=require('http');
           http.createServer((req,res)=>{
             res.setHeader('Content-Type','application/json');
-            if(req.url==='/health'){res.end(JSON.stringify({ok:true,version:'68',service:'Capitan Rodolfo Local'}));return}
+            if(req.url==='/health'){res.end(JSON.stringify({ok:true,version:process.env.DOINGLIO_TEST_VERSION,apiSqlObject:true,service:'Capitan Rodolfo Local'}));return}
             if(req.url==='/api/connect'){let body='';req.on('data',x=>body+=x);req.on('end',()=>res.end(JSON.stringify({ok:true,echo:JSON.parse(body)})));return}
             res.end(JSON.stringify({ok:true}));
           }).listen(18787,'127.0.0.1');
           '@ | Set-Content -Encoding UTF8 "$env:RUNNER_TEMP\fake_sql.js"
+          $expected=(Get-Content "C:\Sistemas\DoingLioRuntime\capitan-rodolfo\VERSION" -Raw).Trim()
+          $env:DOINGLIO_TEST_VERSION=$expected
           $fake=Start-Process node.exe -ArgumentList "$env:RUNNER_TEMP\fake_sql.js" -PassThru
           try {
-            @{ok=$true;port=18787;version='68'}|ConvertTo-Json|Set-Content -Encoding UTF8 "C:\Sistemas\DoingLioRuntime\connector.json"
+            @{ok=$true;port=18787;version=$expected}|ConvertTo-Json|Set-Content -Encoding UTF8 "C:\Sistemas\DoingLioRuntime\connector.json"
             $server=Start-Process powershell.exe -ArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-File',"$PWD\launcher\doinglio_web_server.ps1",'-Root','C:\Sistemas\DoingLioRuntime','-Port','18790') -PassThru -RedirectStandardOutput "$env:RUNNER_TEMP\server.out.log" -RedirectStandardError "$env:RUNNER_TEMP\server.err.log"
             try {
               $health=$null
@@ -143,7 +156,7 @@ jobs:
               }
               if(!$health.ok){Get-Content "$env:RUNNER_TEMP\server.err.log";throw "Servidor local no inicio"}
               $sql=Invoke-RestMethod 'http://127.0.0.1:18790/_doinglio_sql/health'
-              if(!$sql.ok -or $sql.version -ne '68'){throw "Proxy GET SQL no responde"}
+              if(!$sql.ok -or [string]$sql.version -ne $expected){throw "Proxy GET SQL no responde con versión actual"}
               $post=Invoke-RestMethod 'http://127.0.0.1:18790/_doinglio_sql/api/connect' -Method Post -ContentType 'application/json' -Body '{"server":"DUILIO\\SQLEXPRESS"}'
               if(!$post.ok -or !$post.echo.server){throw "Proxy POST SQL no responde"}
               Write-Host "Proxy GET y POST SQL OK"
