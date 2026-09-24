@@ -8,7 +8,7 @@ $Bridge = Join-Path $BridgeDir "capitan_rodolfo_local.ps1"
 $VersionFile = Join-Path $Connector "VERSION"
 $Allowlist = Join-Path $Connector "sp_allowlist.json"
 $Log = Join-Path $Root "launcher.log"
-$Cloud = "https://duiliomf.github.io/doinglio/?desktop=1&build=17"
+$Cloud = "https://duiliomf.github.io/doinglio/?desktop=1&build=18"
 $CapRaw = "https://raw.githubusercontent.com/DuilioMF/capitan-rodolfo/main"
 
 New-Item -ItemType Directory -Force -Path $Root,$Connector,$BridgeDir | Out-Null
