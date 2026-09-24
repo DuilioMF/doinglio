@@ -2,90 +2,140 @@ param(
   [Parameter(Mandatory=$true)][string]$Root,
   [int]$Port = 8790
 )
-
 $ErrorActionPreference = "Stop"
 $Root = [IO.Path]::GetFullPath($Root)
-
+$ConnectorState = Join-Path $Root "connector.json"
+$MaxBody = 131072
 function Get-Mime([string]$Path){
-  switch ([IO.Path]::GetExtension($Path).ToLowerInvariant()){
-    ".html" { return "text/html; charset=utf-8" }
-    ".htm"  { return "text/html; charset=utf-8" }
-    ".js"   { return "application/javascript; charset=utf-8" }
-    ".css"  { return "text/css; charset=utf-8" }
-    ".json" { return "application/json; charset=utf-8" }
-    ".svg"  { return "image/svg+xml" }
-    ".png"  { return "image/png" }
-    ".jpg"  { return "image/jpeg" }
-    ".jpeg" { return "image/jpeg" }
-    ".gif"  { return "image/gif" }
-    ".ico"  { return "image/x-icon" }
-    ".txt"  { return "text/plain; charset=utf-8" }
-    default { return "application/octet-stream" }
-  }
+ switch([IO.Path]::GetExtension($Path).ToLowerInvariant()){
+ '.html'{'text/html; charset=utf-8'} '.htm'{'text/html; charset=utf-8'}
+ '.js'{'application/javascript; charset=utf-8'} '.css'{'text/css; charset=utf-8'}
+ '.json'{'application/json; charset=utf-8'} '.svg'{'image/svg+xml'}
+ '.png'{'image/png'} '.ico'{'image/x-icon'} '.jpg'{'image/jpeg'}
+ '.jpeg'{'image/jpeg'} '.gif'{'image/gif'} default{'application/octet-stream'}
+ }
 }
-
 function Send-Response($Stream,[int]$Code,[string]$Type,[byte[]]$Body){
-  $text = switch($Code){200{"OK"}404{"Not Found"}403{"Forbidden"}500{"Internal Server Error"}default{"OK"}}
-  $nl = [Environment]::NewLine
-  $headers = "HTTP/1.1 $Code $text" + $nl +
-             "Content-Type: $Type" + $nl +
-             "Content-Length: $($Body.Length)" + $nl +
-             "Cache-Control: no-store, no-cache, must-revalidate" + $nl +
-             "Connection: close" + $nl + $nl
-  $hb=[Text.Encoding]::ASCII.GetBytes($headers)
-  $Stream.Write($hb,0,$hb.Length)
-  if($Body.Length -gt 0){ $Stream.Write($Body,0,$Body.Length) }
-  $Stream.Flush()
+ $statusText=switch($Code){200{'OK'}400{'Bad Request'}403{'Forbidden'}404{'Not Found'}405{'Method Not Allowed'}413{'Payload Too Large'}500{'Internal Server Error'}502{'Bad Gateway'}503{'Service Unavailable'} default{'Error'}}
+ $nl=[string]([char]13)+[string]([char]10)
+ $headers="HTTP/1.1 $Code $statusText" + $nl + "Content-Type: $Type" + $nl + "Content-Length: $($Body.Length)" + $nl + "Cache-Control: no-store" + $nl + "X-Content-Type-Options: nosniff" + $nl + "Connection: close" + $nl + $nl
+ $h=[Text.Encoding]::ASCII.GetBytes($headers)
+ $Stream.Write($h,0,$h.Length)
+ if($Body.Length){$Stream.Write($Body,0,$Body.Length)}
+ $Stream.Flush()
 }
-
+function Send-Text($Stream,[int]$Code,[string]$Text,[string]$Mime='text/plain; charset=utf-8'){
+ Send-Response $Stream $Code $Mime ([Text.Encoding]::UTF8.GetBytes($Text))
+}
+function Send-Json($Stream,[int]$Code,$Object){
+ Send-Text $Stream $Code ($Object | ConvertTo-Json -Depth 5 -Compress) 'application/json; charset=utf-8'
+}
+function Receive-Request($Stream){
+ $header=New-Object 'System.Collections.Generic.List[byte]'
+ $matched=0
+ $end=[byte[]](13,10,13,10)
+ while($header.Count -lt 32768){
+   $b=$Stream.ReadByte()
+   if($b -lt 0){return $null}
+   $header.Add([byte]$b)
+   if($b -eq $end[$matched]){$matched++}else{$matched=if($b -eq 13){1}else{0}}
+   if($matched -eq 4){break}
+ }
+ if($matched -ne 4){throw 'Cabecera HTTP demasiado grande'}
+ $crlf=[string]([char]13)+[string]([char]10)
+ $lines=([Text.Encoding]::ASCII.GetString($header.ToArray())).Split([string[]]@($crlf),[StringSplitOptions]::None)
+ $start=$lines[0].Split(' ')
+ if($start.Count -lt 2){throw 'Peticion HTTP invalida'}
+ $headers=@{}
+ foreach($line in $lines[1..($lines.Count-1)]){
+  $idx=$line.IndexOf(':')
+  if($idx -gt 0){$headers[$line.Substring(0,$idx).Trim().ToLowerInvariant()]=$line.Substring($idx+1).Trim()}
+ }
+ $size=0
+ if($headers.ContainsKey('content-length') -and -not [int]::TryParse($headers['content-length'],[ref]$size)){throw 'Content-Length invalido'}
+ if($size -lt 0 -or $size -gt $MaxBody){throw 'Cuerpo demasiado grande'}
+ $body=New-Object byte[] $size
+ $read=0
+ while($read -lt $size){
+   $n=$Stream.Read($body,$read,$size-$read)
+   if($n -le 0){throw 'Cuerpo HTTP incompleto'}
+   $read+=$n
+ }
+ return [pscustomobject]@{method=$start[0];path=$start[1];headers=$headers;body=$body}
+}
+function Proxy-Sql($Stream,$Request){
+ if(-not (Test-Path $ConnectorState)){
+  Send-Json $Stream 503 @{ok=$false;error='No hay informacion de arranque del conector. Abri DoingLio desde el escritorio.'};return
+ }
+ try{$state=Get-Content -Path $ConnectorState -Raw | ConvertFrom-Json}
+ catch{Send-Json $Stream 503 @{ok=$false;error='No pude leer el estado del conector local.'};return}
+ if(-not $state.ok -or -not $state.port){
+  Send-Json $Stream 503 @{ok=$false;error='El conector SQL no arranco. Revisar C:\Sistemas\DoingLioConnector\bridge.err.log y launcher.log.'};return
+ }
+ $sqlPort=[int]$state.port
+ if(@(8787,8797,18787,27877,37877,48787,57877) -notcontains $sqlPort){
+  Send-Json $Stream 503 @{ok=$false;error='Puerto SQL registrado fuera del rango permitido.'};return
+ }
+ $path=$Request.path.Substring('/_doinglio_sql'.Length)
+ if($path -eq '' -or $path -eq '/'){$path='/'}
+ if(-not $path.StartsWith('/')){$path='/'+$path}
+ $target='http://127.0.0.1:'+$sqlPort+$path
+ try{
+  $req=[Net.HttpWebRequest]::Create($target)
+  $req.Method=$Request.method
+  $req.Timeout=20000
+  $req.ReadWriteTimeout=20000
+  $req.AllowAutoRedirect=$false
+  $req.ServicePoint.Expect100Continue=$false
+  if($Request.method -eq 'POST'){
+   $req.ContentType='application/json; charset=utf-8'
+   $req.ContentLength=$Request.body.Length
+   $out=$req.GetRequestStream()
+   try{$out.Write($Request.body,0,$Request.body.Length)}finally{$out.Close()}
+  }
+  $resp=$null
+  try{$resp=$req.GetResponse()}
+  catch [Net.WebException]{if($_.Exception.Response){$resp=$_.Exception.Response}else{throw}}
+  if(-not $resp){throw 'Sin respuesta del conector'}
+  try{
+   $ms=New-Object IO.MemoryStream
+   $input=$resp.GetResponseStream()
+   try{$input.CopyTo($ms)}finally{$input.Close()}
+   $mime=[string]$resp.ContentType
+   if(-not $mime){$mime='application/octet-stream'}
+   Send-Response $Stream ([int]$resp.StatusCode) $mime ($ms.ToArray())
+  }finally{$resp.Close()}
+ }catch{Send-Json $Stream 502 @{ok=$false;error=('Conector en puerto '+$sqlPort+' sin respuesta: '+$_.Exception.Message)}}
+}
 $listener=[Net.Sockets.TcpListener]::new([Net.IPAddress]::Loopback,$Port)
 $listener.Start()
-
 try{
-  while($true){
-    $client=$listener.AcceptTcpClient()
-    try{
-      $stream=$client.GetStream()
-      $reader=New-Object IO.StreamReader($stream,[Text.Encoding]::UTF8,$false,4096,$true)
-      $line=$reader.ReadLine()
-      if([string]::IsNullOrWhiteSpace($line)){ continue }
-      $parts=$line.Split(' ')
-      if($parts.Count -lt 2){ continue }
-      $method=$parts[0]
-      $rawPath=$parts[1]
-      while($true){ $h=$reader.ReadLine(); if($null -eq $h -or $h -eq ''){break} }
-
-      if($method -ne "GET"){
-        Send-Response $stream 403 "text/plain; charset=utf-8" ([Text.Encoding]::UTF8.GetBytes("GET only"))
-        continue
-      }
-
-      $path=($rawPath -split '\?')[0]
-      if($path -eq "/_doinglio_health"){
-        Send-Response $stream 200 "application/json; charset=utf-8" ([Text.Encoding]::UTF8.GetBytes('{"ok":true,"service":"DoingLio Local Web"}'))
-        continue
-      }
-      if($path -eq "/"){ $path="/index.html" }
-
-      $relative=[Uri]::UnescapeDataString($path.TrimStart('/')) -replace '/','\'
-      $file=[IO.Path]::GetFullPath((Join-Path $Root $relative))
-      if(-not $file.StartsWith($Root,[StringComparison]::OrdinalIgnoreCase)){
-        Send-Response $stream 403 "text/plain; charset=utf-8" ([Text.Encoding]::UTF8.GetBytes("Forbidden"))
-        continue
-      }
-      if(-not (Test-Path $file -PathType Leaf)){
-        Send-Response $stream 404 "text/plain; charset=utf-8" ([Text.Encoding]::UTF8.GetBytes("Not found"))
-        continue
-      }
-
-      $bytes=[IO.File]::ReadAllBytes($file)
-      Send-Response $stream 200 (Get-Mime $file) $bytes
-    } catch {
-      try{ Send-Response $stream 500 "text/plain; charset=utf-8" ([Text.Encoding]::UTF8.GetBytes($_.Exception.Message)) }catch{}
-    } finally {
-      try{$client.Close()}catch{}
-    }
-  }
-} finally {
-  $listener.Stop()
-}
+ while($true){
+  $client=$listener.AcceptTcpClient()
+  try{
+   $client.ReceiveTimeout=20000
+   $stream=$client.GetStream()
+   $req=Receive-Request $stream
+   if($null -eq $req){continue}
+   $hostValue=[string]$req.headers['host']
+   if(@("127.0.0.1:$Port","localhost:$Port") -notcontains $hostValue){Send-Text $stream 403 'Host no permitido';continue}
+   if($req.method -ne 'GET' -and $req.method -ne 'POST'){Send-Text $stream 405 'Metodo no permitido';continue}
+   $origin=[string]$req.headers['origin']
+   if($origin -and @("http://127.0.0.1:$Port","http://localhost:$Port") -notcontains $origin){Send-Text $stream 403 'Origen no permitido';continue}
+   if($req.path -match '^/_doinglio_sql(/|$|\?)'){Proxy-Sql $stream $req;continue}
+   if($req.method -ne 'GET'){Send-Text $stream 405 'Solo GET para archivos de la aplicacion';continue}
+   $path=($req.path -split '\?')[0]
+   if($path -eq '/_doinglio_health'){
+     Send-Json $stream 200 @{ok=$true;service='DoingLio Local';port=$Port;connectorStateFile=$ConnectorState};continue
+   }
+   if($path -eq '/'){$path='/index.html'}
+   $relative=[Uri]::UnescapeDataString($path.TrimStart('/')) -replace '/','\'
+   $file=[IO.Path]::GetFullPath((Join-Path $Root $relative))
+   $prefix=$Root.TrimEnd('\')+'\'
+   if(-not $file.StartsWith($prefix,[StringComparison]::OrdinalIgnoreCase)){Send-Text $stream 403 'Acceso denegado';continue}
+   if(-not (Test-Path $file -PathType Leaf)){Send-Text $stream 404 'Archivo no encontrado';continue}
+   Send-Response $stream 200 (Get-Mime $file) ([IO.File]::ReadAllBytes($file))
+  }catch{try{Send-Json $stream 500 @{error=$_.Exception.Message}}catch{}}
+  finally{try{$client.Close()}catch{}}
+ }
+}finally{$listener.Stop()}
