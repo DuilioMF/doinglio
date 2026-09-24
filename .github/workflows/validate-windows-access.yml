@@ -1,5 +1,4 @@
-name: Validate Windows access
-
+name: Validate Windows desktop app
 on:
   workflow_dispatch:
   push:
@@ -13,60 +12,98 @@ jobs:
   validate:
     runs-on: windows-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Execute installer on Windows
+      - uses: actions/checkout@v4
+      - name: Instalar acceso con cerebro
         shell: powershell
         run: |
           $env:DOINGLIO_CI = "1"
           & ".\INSTALAR_DOINGLIO.bat"
-          if ($LASTEXITCODE -ne 0) { throw "INSTALAR_DOINGLIO.bat fallo con codigo $LASTEXITCODE" }
-
-      - name: Verify desktop BAT
-        shell: powershell
-        run: |
-          $desktop = [Environment]::GetFolderPath([Environment+SpecialFolder]::Desktop)
-          $bat = Join-Path $desktop "DoingLio.bat"
-          if (!(Test-Path $bat)) { throw "No se creo $bat" }
-          Write-Host "OK: $bat"
-
-      - name: Execute desktop BAT bootstrap
+          if($LASTEXITCODE -ne 0){throw "Fallo instalador BAT"}
+          $desktop=[Environment]::GetFolderPath([Environment+SpecialFolder]::DesktopDirectory)
+          $shortcut=Join-Path $desktop "DoingLio.lnk"
+          if(!(Test-Path $shortcut)){throw "No se creo el acceso directo"}
+          $shell=New-Object -ComObject WScript.Shell
+          $link=$shell.CreateShortcut($shortcut)
+          if($link.IconLocation -notmatch "brain-davinci.ico"){throw "Icono cerebral no configurado"}
+          if(!(Test-Path "C:\Sistemas\DoingLioLauncher\brain-davinci.ico")){throw "Falta ICO"}
+          if(!(Test-Path "C:\Sistemas\DoingLioLauncher\DoingLioInicio.vbs")){throw "Falta VBS"}
+          Write-Host "Acceso directo e icono OK"
+      - name: Verificar instalador y arrancador de escritorio
         shell: powershell
         run: |
           $env:DOINGLIO_CI = "1"
-          $desktop = [Environment]::GetFolderPath([Environment+SpecialFolder]::Desktop)
-          $bat = Join-Path $desktop "DoingLio.bat"
-          & $bat
-          if ($LASTEXITCODE -ne 0) { throw "DoingLio.bat fallo con codigo $LASTEXITCODE" }
-
-      - name: Validate PowerShell launcher syntax
-        shell: powershell
-        run: |
-          $launcher = "C:\Sistemas\DoingLioLauncher\doinglio_launcher.ps1"
-          if (!(Test-Path $launcher)) { throw "No se descargo $launcher" }
-          $tokens = $null
-          $errors = $null
-          [System.Management.Automation.Language.Parser]::ParseFile($launcher,[ref]$tokens,[ref]$errors) | Out-Null
-          if ($errors.Count -gt 0) {
-            $errors | ForEach-Object { Write-Error $_.Message }
-            throw "El launcher PowerShell tiene errores de sintaxis."
-          }
-          Write-Host "OK: sintaxis PowerShell valida"
-
-      - name: Verify local runtime downloaded
-        shell: powershell
-        run: |
-          $required = @(
+          & "C:\Sistemas\DoingLioLauncher\DOINGLIO.bat"
+          if($LASTEXITCODE -ne 0){throw "Fallo arranque automatico"}
+          $paths=@(
             "C:\Sistemas\DoingLioRuntime\index.html",
             "C:\Sistemas\DoingLioRuntime\BUILD",
             "C:\Sistemas\DoingLioRuntime\capitan-rodolfo\index.html",
             "C:\Sistemas\DoingLioRuntime\capitan-rodolfo\VERSION",
             "C:\Sistemas\DoingLioRuntime\ruben\index.html",
-            "C:\Sistemas\DoingLioRuntime\ruben\VERSION",
+            "C:\Sistemas\DoingLioRuntime\ruben\VERSION"
+          )
+          foreach($path in $paths){if(!(Test-Path $path)){throw "Falta $path"}}
+          Write-Host "Runtime local OK"
+      - name: Validar sintaxis PowerShell y JavaScript
+        shell: powershell
+        run: |
+          $paths=@(
+            ".\launcher\instalar_acceso.ps1",
+            ".\launcher\doinglio_web_server.ps1",
+            ".\launcher\doinglio_launcher.ps1",
             "C:\Sistemas\DoingLioConnector\bridge\capitan_rodolfo_local.ps1"
           )
-          foreach($p in $required){
-            if(!(Test-Path $p)){ throw "Falta archivo de runtime: $p" }
-            Write-Host "OK: $p"
+          foreach($path in $paths){
+            $tokens=$null; $errors=$null
+            [Management.Automation.Language.Parser]::ParseFile($path,[ref]$tokens,[ref]$errors)|Out-Null
+            if($errors.Count){$errors|ForEach-Object{Write-Host $_.Message};throw "PowerShell invalido: $path"}
+            Write-Host "PowerShell correcto: $path"
           }
+          @'
+          const fs=require('fs'),cp=require('child_process'),path=require('path');
+          const roots=['./index.html','./capitan-rodolfo/index.html','./capitan-rodolfo/nucleo.html','./capitan-rodolfo/conexion-sql.html','./capitan-rodolfo/mapa-vivo.html'];
+          for(const filename of roots){
+            const html=fs.readFileSync(filename,'utf8');
+            const matches=[...html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)];
+            matches.forEach((match,i)=>{
+              const script=match[1].trim(); if(!script)return;
+              const testFile=path.join(process.env.RUNNER_TEMP,'doinglio-'+path.basename(filename)+'-'+i+'.js');
+              fs.writeFileSync(testFile,script);
+              cp.execFileSync('node',['--check',testFile],{stdio:'inherit'});
+            });
+            console.log('JavaScript correcto:',filename);
+          }
+          '@ | Set-Content -Encoding UTF8 "$env:RUNNER_TEMP\checkjs.cjs"
+          & node "$env:RUNNER_TEMP\checkjs.cjs"
+          if($LASTEXITCODE -ne 0){throw "JavaScript invalido"}
+      - name: Probar proxy SQL mismo origen (servidor simulado)
+        shell: powershell
+        run: |
+          $env:DOINGLIO_CI = "1"
+          @'
+          const http=require('http');
+          http.createServer((req,res)=>{
+            res.setHeader('Content-Type','application/json');
+            if(req.url==='/health'){res.end(JSON.stringify({ok:true,version:'68',service:'Capitan Rodolfo Local'}));return}
+            if(req.url==='/api/connect'){let body='';req.on('data',x=>body+=x);req.on('end',()=>res.end(JSON.stringify({ok:true,echo:JSON.parse(body)})));return}
+            res.end(JSON.stringify({ok:true}));
+          }).listen(18787,'127.0.0.1');
+          '@ | Set-Content -Encoding UTF8 "$env:RUNNER_TEMP\fake_sql.js"
+          $fake=Start-Process node.exe -ArgumentList "$env:RUNNER_TEMP\fake_sql.js" -PassThru
+          try {
+            @{ok=$true;port=18787;version='68'}|ConvertTo-Json|Set-Content -Encoding UTF8 "C:\Sistemas\DoingLioRuntime\connector.json"
+            $server=Start-Process powershell.exe -ArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-File',"$PWD\launcher\doinglio_web_server.ps1",'-Root','C:\Sistemas\DoingLioRuntime','-Port','18790') -PassThru -RedirectStandardOutput "$env:RUNNER_TEMP\server.out.log" -RedirectStandardError "$env:RUNNER_TEMP\server.err.log"
+            try {
+              $health=$null
+              for($i=0;$i -lt 40;$i++){
+                Start-Sleep -Milliseconds 300
+                try {$health=Invoke-RestMethod 'http://127.0.0.1:18790/_doinglio_health' -TimeoutSec 1;break}catch{}
+              }
+              if(!$health.ok){Get-Content "$env:RUNNER_TEMP\server.err.log";throw "Servidor local no inicio"}
+              $sql=Invoke-RestMethod 'http://127.0.0.1:18790/_doinglio_sql/health'
+              if(!$sql.ok -or $sql.version -ne '68'){throw "Proxy GET SQL no responde"}
+              $post=Invoke-RestMethod 'http://127.0.0.1:18790/_doinglio_sql/api/connect' -Method Post -ContentType 'application/json' -Body '{"server":"DUILIO\\SQLEXPRESS"}'
+              if(!$post.ok -or !$post.echo.server){throw "Proxy POST SQL no responde"}
+              Write-Host "Proxy GET y POST SQL OK"
+            } finally {if($server){Stop-Process -Id $server.Id -Force -ErrorAction SilentlyContinue}}
+          } finally {if($fake){Stop-Process -Id $fake.Id -Force -ErrorAction SilentlyContinue}}
