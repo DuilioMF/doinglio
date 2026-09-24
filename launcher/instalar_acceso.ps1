@@ -8,6 +8,7 @@ $Base = "https://raw.githubusercontent.com/DuilioMF/doinglio/main"
 $Bat = Join-Path $Root "DOINGLIO.bat"
 $Icon = Join-Path $Root "brain-davinci.ico"
 $Vbs = Join-Path $Root "DoingLioInicio.vbs"
+$Splash = Join-Path $Root "reloj_inicio.hta"
 $InstallLog = Join-Path $Root "instalador.log"
 
 New-Item -ItemType Directory -Force -Path $Root | Out-Null
@@ -37,18 +38,13 @@ try {
     [IO.File]::WriteAllBytes($Icon,$bytes)
     Remove-Item $encodedPath -Force
 
-    # Acceso sin ventana de CMD. El BAT actualiza DoingLio en cada apertura.
-    $vbsText = @'
-Set app = CreateObject("WScript.Shell")
-q = Chr(34)
-cmd = "powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File " & q & "C:\Sistemas\DoingLioLauncher\abrir_doinglio.ps1" & q
-code = app.Run(cmd, 0, True)
-If code <> 0 Then
-    app.Run "notepad.exe " & q & "C:\Sistemas\DoingLioLauncher\inicio.log" & q, 1, False
-    MsgBox "No se pudo iniciar DoingLio. Se abrio el log con el error.", vbExclamation, "DoingLio"
-End If
-'@
-    [IO.File]::WriteAllText($Vbs,$vbsText,[Text.Encoding]::ASCII)
+    # La apertura silenciosa muestra el mismo reloj 4:10 de la portada
+    # mientras el launcher descarga y activa la copia local.
+    Download-Atomic ($Base + "/launcher/reloj_inicio.hta") $Splash
+    Download-Atomic ($Base + "/launcher/DoingLioInicio.vbs") $Vbs
+    if(-not (Test-Path $Splash) -or (Get-Item $Splash).Length -lt 600){
+       throw "No se pudo instalar el reloj de arranque"
+    }
 
     $desktop = [Environment]::GetFolderPath([Environment+SpecialFolder]::DesktopDirectory)
     if([string]::IsNullOrWhiteSpace($desktop)){ throw "Windows no devolvio la ubicacion del Escritorio" }
