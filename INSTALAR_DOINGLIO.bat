@@ -1,38 +1,35 @@
 @echo off
 setlocal EnableExtensions
-title Instalar acceso DoingLio
+title Instalar DoingLio con icono de cerebro
 
-set "RAW=https://raw.githubusercontent.com/DuilioMF/doinglio/main/DOINGLIO.bat"
+set "ROOT=C:\Sistemas\DoingLioLauncher"
+set "INSTALLER=%ROOT%\instalar_acceso.ps1"
+set "RAW=https://raw.githubusercontent.com/DuilioMF/doinglio/main/launcher/instalar_acceso.ps1"
 
-echo.
-echo ============================================================
-echo              INSTALAR ACCESO DOINGLIO
-echo ============================================================
-echo.
-
-for /f "delims=" %%D in ('powershell.exe -NoProfile -Command "[Environment]::GetFolderPath([Environment+SpecialFolder]::Desktop)"') do set "DESKTOP=%%D"
-if not defined DESKTOP goto :error
-
-set "DEST=%DESKTOP%\DoingLio.bat"
-
-echo [1/2] Descargando acceso actualizado...
-powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Stop'; Invoke-WebRequest -UseBasicParsing -Uri '%RAW%' -OutFile '%DEST%'"
+if not exist "%ROOT%" mkdir "%ROOT%"
 if errorlevel 1 goto :error
-if not exist "%DEST%" goto :error
 
-if /I "%DOINGLIO_CI%"=="1" exit /b 0
-
-echo [2/2] Listo:
-echo       %DEST%
 echo.
-echo A partir de ahora usa DoingLio.bat del Escritorio.
-call "%DEST%"
-timeout /t 1 >nul
+echo ======================================
+echo   DOINGLIO - ACCESO DE ESCRITORIO
+echo ======================================
+echo.
+echo Instalando el icono de cerebro...
+
+powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Stop'; Invoke-WebRequest -UseBasicParsing -Uri '%RAW%' -OutFile '%INSTALLER%' -TimeoutSec 40"
+if errorlevel 1 goto :error
+
+if /I "%DOINGLIO_CI%"=="1" (
+    powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%INSTALLER%" -NoLaunch
+) else (
+    powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%INSTALLER%"
+)
+if errorlevel 1 goto :error
+
+echo Listo. Usa el acceso DoingLio con icono de cerebro del Escritorio.
 exit /b 0
 
 :error
-echo.
-echo No pude crear DoingLio.bat en el Escritorio.
-echo No se borro ninguna configuracion.
+echo No se pudo instalar. Log: %ROOT%\instalador.log
 pause
 exit /b 1
