@@ -10,7 +10,7 @@ echo              INSTALAR ACCESO DOINGLIO
 echo ============================================================
 echo.
 
-for /f "delims=" %%D in ('powershell.exe -NoProfile -Command "[Environment]::GetFolderPath(''Desktop'')"') do set "DESKTOP=%%D"
+for /f "delims=" %%D in ('powershell.exe -NoProfile -Command "[Environment]::GetFolderPath([Environment+SpecialFolder]::Desktop)"') do set "DESKTOP=%%D"
 if not defined DESKTOP goto :error
 
 set "DEST=%DESKTOP%\DoingLio.bat"
