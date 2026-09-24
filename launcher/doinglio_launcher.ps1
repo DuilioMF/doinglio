@@ -16,7 +16,7 @@ $Log = Join-Path $Root "launcher.log"
 $CI = ($env:DOINGLIO_CI -eq "1")
 
 New-Item -ItemType Directory -Force -Path $Root,$Connector,$BridgeDir | Out-Null
-Add-Content -Path $Log -Value ("["+(Get-Date).ToString("s")+"] Inicio DoingLio D24")
+Add-Content -Path $Log -Value ("["+(Get-Date).ToString("s")+"] Inicio DoingLio D26")
 
 function Log([string]$Message){
   Add-Content -Path $Log -Value ("["+(Get-Date).ToString("s")+"] "+$Message)
