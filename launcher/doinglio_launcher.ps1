@@ -16,7 +16,7 @@ $Log = Join-Path $Root "launcher.log"
 $CI = ($env:DOINGLIO_CI -eq "1")
 
 New-Item -ItemType Directory -Force -Path $Root,$Connector,$BridgeDir | Out-Null
-Add-Content -Path $Log -Value ("["+(Get-Date).ToString("s")+"] Inicio DoingLio D20")
+Add-Content -Path $Log -Value ("["+(Get-Date).ToString("s")+"] Inicio DoingLio D21")
 
 function Log([string]$Message){
   Add-Content -Path $Log -Value ("["+(Get-Date).ToString("s")+"] "+$Message)
@@ -67,7 +67,7 @@ function Test-Connector {
   foreach($p in @(8787,8797,18787,27877,37877,48787,57877)){
     try {
       $r=Invoke-RestMethod -Uri ("http://127.0.0.1:"+$p+"/health") -TimeoutSec 1
-      if($r.ok -and $r.service -eq "Capitan Rodolfo Local"){ return $p }
+      if($r.ok -and $r.service -eq "Capitan Rodolfo Local" -and [string]$r.version -eq "67"){ return $p }
     } catch {}
   }
   return $null
@@ -117,10 +117,12 @@ if(-not $CI){
   $connectorPort = Test-Connector
   if(-not $connectorPort -and (Test-Path $Bridge)){
     try {
+      $bridgeOut = Join-Path $Connector "bridge.out.log"
+      $bridgeErr = Join-Path $Connector "bridge.err.log"
       Start-Process -FilePath "powershell.exe" -WindowStyle Hidden -ArgumentList @(
         "-NoProfile","-ExecutionPolicy","Bypass","-File",$Bridge,"-AppDir",$Connector,"-BackgroundChild"
-      ) | Out-Null
-      Log "Conector SQL lanzado; esperando health"
+      ) -RedirectStandardOutput $bridgeOut -RedirectStandardError $bridgeErr | Out-Null
+      Log ("Conector SQL v67 lanzado; esperando health. stdout="+$bridgeOut+" stderr="+$bridgeErr)
     } catch {
       Log ("ERROR lanzando SQL: " + $_.Exception.Message)
     }
@@ -135,9 +137,17 @@ if(-not $CI){
   }
 
   if($connectorPort){
-    Log ("Conector SQL listo puerto " + $connectorPort)
+    Log ("Conector SQL v67 listo puerto " + $connectorPort)
+    try {
+      @{ok=$true;port=[int]$connectorPort;version="67";updatedAt=(Get-Date).ToString("o")} |
+        ConvertTo-Json | Set-Content -Path (Join-Path $Runtime "connector.json") -Encoding UTF8
+    } catch { Log ("No pude escribir connector.json: "+$_.Exception.Message) }
   } else {
-    Log "ERROR: el conector SQL no respondio /health luego de 15 segundos"
+    Log "ERROR: el conector SQL v67 no respondio /health luego de 15 segundos"
+    try {
+      @{ok=$false;port=$null;version="67";updatedAt=(Get-Date).ToString("o")} |
+        ConvertTo-Json | Set-Content -Path (Join-Path $Runtime "connector.json") -Encoding UTF8
+    } catch {}
   }
 }
 
