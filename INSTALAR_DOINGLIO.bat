@@ -20,6 +20,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreferen
 if errorlevel 1 goto :error
 
 if not exist "%DEST%" goto :error
+if /I "%DOINGLIO_CI%"=="1" exit /b 0
 
 echo [2/2] Acceso creado:
 echo       %DEST%
