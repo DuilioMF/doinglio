@@ -144,8 +144,9 @@ function Proxy-Sql($Stream,$Request){
  try{
   $req=[Net.HttpWebRequest]::Create($target)
   $req.Method=$Request.method
-  $req.Timeout=20000
-  $req.ReadWriteTimeout=20000
+  $proxyTimeout=if($path -eq '/api/circuit/install'){120000}else{20000}
+  $req.Timeout=$proxyTimeout
+  $req.ReadWriteTimeout=$proxyTimeout
   $req.AllowAutoRedirect=$false
   $req.ServicePoint.Expect100Continue=$false
   if($Request.method -eq 'POST'){
