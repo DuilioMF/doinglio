@@ -53,3 +53,20 @@ jobs:
             throw "El launcher PowerShell tiene errores de sintaxis."
           }
           Write-Host "OK: sintaxis PowerShell valida"
+
+      - name: Verify local runtime downloaded
+        shell: powershell
+        run: |
+          $required = @(
+            "C:\Sistemas\DoingLioRuntime\index.html",
+            "C:\Sistemas\DoingLioRuntime\BUILD",
+            "C:\Sistemas\DoingLioRuntime\capitan-rodolfo\index.html",
+            "C:\Sistemas\DoingLioRuntime\capitan-rodolfo\VERSION",
+            "C:\Sistemas\DoingLioRuntime\ruben\index.html",
+            "C:\Sistemas\DoingLioRuntime\ruben\VERSION",
+            "C:\Sistemas\DoingLioConnector\bridge\capitan_rodolfo_local.ps1"
+          )
+          foreach($p in $required){
+            if(!(Test-Path $p)){ throw "Falta archivo de runtime: $p" }
+            Write-Host "OK: $p"
+          }
