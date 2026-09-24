@@ -16,7 +16,7 @@ $Log = Join-Path $Root "launcher.log"
 $CI = ($env:DOINGLIO_CI -eq "1")
 
 New-Item -ItemType Directory -Force -Path $Root,$Connector,$BridgeDir | Out-Null
-Add-Content -Path $Log -Value ("["+(Get-Date).ToString("s")+"] Inicio DoingLio D22")
+Add-Content -Path $Log -Value ("["+(Get-Date).ToString("s")+"] Inicio DoingLio D23")
 
 function Log([string]$Message){
   Add-Content -Path $Log -Value ("["+(Get-Date).ToString("s")+"] "+$Message)
@@ -40,13 +40,36 @@ function Expand-Repo([string]$Repo,[string]$Destination,[string]$Work){
   Copy-Item -Path (Join-Path $source.FullName "*") -Destination $Destination -Recurse -Force
 }
 
+function Get-ManagedProcesses([string]$ScriptFullPath){
+  # Solo detener procesos cuyos argumentos apuntan a NUESTRA instalacion.
+  $match = [regex]::Escape($ScriptFullPath)
+  try {
+    @(Get-CimInstance Win32_Process -Filter "Name = 'powershell.exe' OR Name = 'pwsh.exe'" -ErrorAction Stop |
+      Where-Object { $_.CommandLine -and $_.CommandLine -match $match })
+  } catch {
+    Log ("No pude consultar procesos propios de " + $ScriptFullPath + ": " + $_.Exception.Message)
+    @()
+  }
+}
+function Stop-ManagedBridge {
+  # La tarea podria estar ejecutando el antiguo script residente.
+  # No se borran credenciales, bases ni archivos de estado.
+  try { & schtasks.exe /End /TN "CapitanRodolfoLocal" 2>$null | Out-Null } catch {}
+  foreach($proc in @(Get-ManagedProcesses $Bridge)){
+    if($proc.ProcessId -eq $PID){ continue }
+    Log ("Deteniendo SOLO conector anterior PID=" + $proc.ProcessId)
+    try { Stop-Process -Id $proc.ProcessId -Force -ErrorAction Stop }
+    catch { Log ("ERROR deteniendo PID " + $proc.ProcessId + ": " + $_.Exception.Message) }
+  }
+  Start-Sleep -Milliseconds 400
+}
 function Stop-PreviousWeb {
-  if(Test-Path $WebPidFile){
-    try {
-      $oldPid = [int](Get-Content $WebPidFile -Raw).Trim()
-      $p = Get-Process -Id $oldPid -ErrorAction SilentlyContinue
-      if($p){ Stop-Process -Id $oldPid -Force -ErrorAction SilentlyContinue }
-    } catch {}
+  # El pid guardado puede haber sido reutilizado. Validar la linea de comandos.
+  foreach($proc in @(Get-ManagedProcesses $ServerScript)){
+    if($proc.ProcessId -eq $PID){ continue }
+    Log ("Cerrando servidor web propio anterior PID=" + $proc.ProcessId)
+    try { Stop-Process -Id $proc.ProcessId -Force -ErrorAction Stop }
+    catch { Log ("ERROR cerrando web anterior: " + $_.Exception.Message) }
   }
   Remove-Item $WebPidFile,$WebPortFile -Force -ErrorAction SilentlyContinue
 }
@@ -67,7 +90,7 @@ function Test-Connector {
   foreach($p in @(8787,8797,18787,27877,37877,48787,57877)){
     try {
       $r=Invoke-RestMethod -Uri ("http://127.0.0.1:"+$p+"/health") -TimeoutSec 1
-      if($r.ok -and $r.service -eq "Capitan Rodolfo Local" -and [string]$r.version -eq $ExpectedConnectorVersion){ return $p }
+      if($r.ok -and $r.service -eq "Capitan Rodolfo Local" -and [string]$r.version -eq $ExpectedConnectorVersion -and $r.apiSqlObject -eq $true){ return $p }
     } catch {}
   }
   return $null
@@ -86,6 +109,28 @@ try {
   Expand-Repo -Repo "capitan-rodolfo" -Destination (Join-Path $BuildRuntime "capitan-rodolfo") -Work $work
   Log "Descargando Ruben"
   Expand-Repo -Repo "ruben" -Destination (Join-Path $BuildRuntime "ruben") -Work $work
+
+  # El codigo descargado y el bridge residente deben quedar en la MISMA version.
+  # Antes de reemplazar el archivo, retirar solo instancias de nuestro conector viejo.
+  $NewConnectorVersion = (Get-Content (Join-Path $BuildRuntime "capitan-rodolfo\VERSION") -Raw).Trim()
+  if(-not $CI){
+    $oldRunning = $false
+    foreach($port in @(8787,8797,18787,27877,37877,48787,57877)){
+      try {
+        $h=Invoke-RestMethod -Uri ("http://127.0.0.1:"+$port+"/health") -TimeoutSec 1
+        if($h.ok -and $h.service -eq "Capitan Rodolfo Local" -and
+           [string]$h.version -eq $NewConnectorVersion -and $h.apiSqlObject -eq $true){
+          $oldRunning=$true
+          Log ("Conector correcto v" + $NewConnectorVersion + " ya activo en " + $port)
+          break
+        }
+      } catch {}
+    }
+    if(-not $oldRunning){
+      Log ("Retirando conector anterior antes de activar v" + $NewConnectorVersion)
+      Stop-ManagedBridge
+    }
+  }
 
   # Copiar el componente SQL desde la misma version de Capitan que acabamos de bajar.
   Copy-Item (Join-Path $BuildRuntime "capitan-rodolfo\bridge\capitan_rodolfo_local.ps1") $Bridge -Force
@@ -122,10 +167,10 @@ if(-not $CI){
     try {
       $bridgeOut = Join-Path $Connector "bridge.out.log"
       $bridgeErr = Join-Path $Connector "bridge.err.log"
-      Start-Process -FilePath "powershell.exe" -WindowStyle Hidden -ArgumentList @(
+      $bridgeProcess = Start-Process -FilePath "powershell.exe" -WindowStyle Hidden -PassThru -ArgumentList @(
         "-NoProfile","-ExecutionPolicy","Bypass","-File",$Bridge,"-AppDir",$Connector,"-BackgroundChild"
       ) -RedirectStandardOutput $bridgeOut -RedirectStandardError $bridgeErr | Out-Null
-      Log ("Conector SQL v$ExpectedConnectorVersion lanzado; esperando health. stdout="+$bridgeOut+" stderr="+$bridgeErr)
+      Log ("Conector SQL v"+$ExpectedConnectorVersion+" lanzado PID="+$bridgeProcess.Id+"; esperando health. stdout="+$bridgeOut+" stderr="+$bridgeErr)
     } catch {
       Log ("ERROR lanzando SQL: " + $_.Exception.Message)
     }
@@ -146,7 +191,9 @@ if(-not $CI){
         ConvertTo-Json | Set-Content -Path (Join-Path $Runtime "connector.json") -Encoding UTF8
     } catch { Log ("No pude escribir connector.json: "+$_.Exception.Message) }
   } else {
-    Log "ERROR: el conector SQL v67 no respondio /health luego de 15 segundos"
+    Log ("ERROR: el conector SQL v"+$ExpectedConnectorVersion+" no respondio /health luego de 15 segundos")
+    try { if(Test-Path (Join-Path $Connector "bridge.err.log")){ Get-Content (Join-Path $Connector "bridge.err.log") -Tail 12 | ForEach-Object { Log ("bridge.err: "+$_) } } } catch {}
+    try { if(Test-Path "C:\Sistemas\DoingLio\data\capitan\estado.json"){ Log ("Existe estado local en C:\Sistemas\DoingLio\data\capitan\estado.json") } } catch {}
     try {
       @{ok=$false;port=$null;version=$ExpectedConnectorVersion;updatedAt=(Get-Date).ToString("o")} |
         ConvertTo-Json | Set-Content -Path (Join-Path $Runtime "connector.json") -Encoding UTF8
