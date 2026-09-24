@@ -28,6 +28,8 @@ function Download-Atomic([string]$Url,[string]$File) {
 try {
     Write-InstallLog "Instalando acceso directo DoingLio"
     Download-Atomic ($Base + "/DOINGLIO.bat") $Bat
+    $OpenScript = Join-Path $Root "abrir_doinglio.ps1"
+    Download-Atomic ($Base + "/launcher/abrir_doinglio.ps1") $OpenScript
     $encodedPath = Join-Path $Root "brain-davinci.ico.b64"
     Download-Atomic ($Base + "/launcher/brain-davinci.ico.b64") $encodedPath
     $bytes = [Convert]::FromBase64String(([IO.File]::ReadAllText($encodedPath)).Trim())
@@ -37,8 +39,14 @@ try {
 
     # Acceso sin ventana de CMD. El BAT actualiza DoingLio en cada apertura.
     $vbsText = @'
-Set WshShell = CreateObject("WScript.Shell")
-WshShell.Run "cmd.exe /d /c ""C:\Sistemas\DoingLioLauncher\DOINGLIO.bat""", 0, False
+Set app = CreateObject("WScript.Shell")
+q = Chr(34)
+cmd = "powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File " & q & "C:\Sistemas\DoingLioLauncher\abrir_doinglio.ps1" & q
+code = app.Run(cmd, 0, True)
+If code <> 0 Then
+    app.Run "notepad.exe " & q & "C:\Sistemas\DoingLioLauncher\inicio.log" & q, 1, False
+    MsgBox "No se pudo iniciar DoingLio. Se abrio el log con el error.", vbExclamation, "DoingLio"
+End If
 '@
     [IO.File]::WriteAllText($Vbs,$vbsText,[Text.Encoding]::ASCII)
 
@@ -56,6 +64,7 @@ WshShell.Run "cmd.exe /d /c ""C:\Sistemas\DoingLioLauncher\DOINGLIO.bat""", 0, F
     $shortcut.Save()
 
     if(-not (Test-Path $destination)){ throw "No se pudo crear el acceso directo en el Escritorio" }
+    if(-not (Test-Path $OpenScript)){ throw "No se descargo el arrancador con diagnostico" }
     $check = $shell.CreateShortcut($destination)
     if($check.IconLocation -notmatch "brain-davinci.ico"){ throw "El acceso directo no conserva el icono de cerebro" }
     Write-InstallLog ("Acceso creado: " + $destination + " | Icono: " + $Icon)
