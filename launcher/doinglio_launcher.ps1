@@ -16,7 +16,7 @@ $Log = Join-Path $Root "launcher.log"
 $CI = ($env:DOINGLIO_CI -eq "1")
 
 New-Item -ItemType Directory -Force -Path $Root,$Connector,$BridgeDir | Out-Null
-Add-Content -Path $Log -Value ("["+(Get-Date).ToString("s")+"] Inicio DoingLio D21")
+Add-Content -Path $Log -Value ("["+(Get-Date).ToString("s")+"] Inicio DoingLio D22")
 
 function Log([string]$Message){
   Add-Content -Path $Log -Value ("["+(Get-Date).ToString("s")+"] "+$Message)
@@ -67,7 +67,7 @@ function Test-Connector {
   foreach($p in @(8787,8797,18787,27877,37877,48787,57877)){
     try {
       $r=Invoke-RestMethod -Uri ("http://127.0.0.1:"+$p+"/health") -TimeoutSec 1
-      if($r.ok -and $r.service -eq "Capitan Rodolfo Local" -and [string]$r.version -eq "67"){ return $p }
+      if($r.ok -and $r.service -eq "Capitan Rodolfo Local" -and [string]$r.version -eq $ExpectedConnectorVersion){ return $p }
     } catch {}
   }
   return $null
@@ -112,7 +112,10 @@ finally {
   Remove-Item $work -Recurse -Force -ErrorAction SilentlyContinue
 }
 
-# 2. Levantar la conexion SQL local y esperar a que responda /health.
+# 2. Levantar la conexion SQL local, verificar su version y recordar su puerto.
+$ExpectedConnectorVersion = "desconocida"
+if(Test-Path $VersionFile){ $ExpectedConnectorVersion = (Get-Content $VersionFile -Raw).Trim() }
+Log ("Version esperada del conector: "+$ExpectedConnectorVersion)
 if(-not $CI){
   $connectorPort = Test-Connector
   if(-not $connectorPort -and (Test-Path $Bridge)){
@@ -122,7 +125,7 @@ if(-not $CI){
       Start-Process -FilePath "powershell.exe" -WindowStyle Hidden -ArgumentList @(
         "-NoProfile","-ExecutionPolicy","Bypass","-File",$Bridge,"-AppDir",$Connector,"-BackgroundChild"
       ) -RedirectStandardOutput $bridgeOut -RedirectStandardError $bridgeErr | Out-Null
-      Log ("Conector SQL v67 lanzado; esperando health. stdout="+$bridgeOut+" stderr="+$bridgeErr)
+      Log ("Conector SQL v$ExpectedConnectorVersion lanzado; esperando health. stdout="+$bridgeOut+" stderr="+$bridgeErr)
     } catch {
       Log ("ERROR lanzando SQL: " + $_.Exception.Message)
     }
@@ -137,15 +140,15 @@ if(-not $CI){
   }
 
   if($connectorPort){
-    Log ("Conector SQL v67 listo puerto " + $connectorPort)
+    Log ("Conector SQL v$ExpectedConnectorVersion listo puerto " + $connectorPort)
     try {
-      @{ok=$true;port=[int]$connectorPort;version="67";updatedAt=(Get-Date).ToString("o")} |
+      @{ok=$true;port=[int]$connectorPort;version=$ExpectedConnectorVersion;updatedAt=(Get-Date).ToString("o")} |
         ConvertTo-Json | Set-Content -Path (Join-Path $Runtime "connector.json") -Encoding UTF8
     } catch { Log ("No pude escribir connector.json: "+$_.Exception.Message) }
   } else {
     Log "ERROR: el conector SQL v67 no respondio /health luego de 15 segundos"
     try {
-      @{ok=$false;port=$null;version="67";updatedAt=(Get-Date).ToString("o")} |
+      @{ok=$false;port=$null;version=$ExpectedConnectorVersion;updatedAt=(Get-Date).ToString("o")} |
         ConvertTo-Json | Set-Content -Path (Join-Path $Runtime "connector.json") -Encoding UTF8
     } catch {}
   }
