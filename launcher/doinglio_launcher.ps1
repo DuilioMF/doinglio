@@ -16,7 +16,7 @@ $Log = Join-Path $Root "launcher.log"
 $CI = ($env:DOINGLIO_CI -eq "1")
 
 New-Item -ItemType Directory -Force -Path $Root,$Connector,$BridgeDir | Out-Null
-Add-Content -Path $Log -Value ("["+(Get-Date).ToString("s")+"] Inicio DoingLio D23")
+Add-Content -Path $Log -Value ("["+(Get-Date).ToString("s")+"] Inicio DoingLio D24")
 
 function Log([string]$Message){
   Add-Content -Path $Log -Value ("["+(Get-Date).ToString("s")+"] "+$Message)
@@ -25,6 +25,25 @@ function Log([string]$Message){
 function Download-Text([string]$Url,[string]$OutFile){
   Invoke-WebRequest -UseBasicParsing -Uri $Url -OutFile $OutFile -TimeoutSec 30
 }
+# Actualizar el splash y VBS del acceso ya instalado, sin recrear el acceso
+# ni alterar el icono. Este cambio aparece desde la siguiente apertura.
+if(-not $CI -and (Test-Path (Join-Path $Root "DoingLioInicio.vbs"))){
+  foreach($item in @(
+    @{source="reloj_inicio.hta";dest="reloj_inicio.hta"},
+    @{source="DoingLioInicio.vbs";dest="DoingLioInicio.vbs"}
+  )){
+    $target=Join-Path $Root $item.dest
+    $tmp=$target+".download"
+    try {
+      Download-Text ("https://raw.githubusercontent.com/DuilioMF/doinglio/main/launcher/"+$item.source) $tmp
+      if((Get-Item $tmp).Length -lt 100){throw "Descarga incompleta"}
+      Move-Item $tmp $target -Force
+    } catch {
+      Log ("Reloj de apertura: no pude actualizar "+$item.source+": "+$_.Exception.Message)
+    } finally {Remove-Item $tmp -Force -ErrorAction SilentlyContinue}
+  }
+}
+
 
 function Expand-Repo([string]$Repo,[string]$Destination,[string]$Work){
   $zip = Join-Path $Work ($Repo + ".zip")
