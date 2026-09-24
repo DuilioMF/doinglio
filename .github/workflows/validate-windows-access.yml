@@ -1,0 +1,55 @@
+name: Validate Windows access
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "DOINGLIO.bat"
+      - "INSTALAR_DOINGLIO.bat"
+      - "launcher/**"
+      - ".github/workflows/validate-windows-access.yml"
+
+jobs:
+  validate:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Execute installer on Windows
+        shell: powershell
+        run: |
+          $env:DOINGLIO_CI = "1"
+          & ".\INSTALAR_DOINGLIO.bat"
+          if ($LASTEXITCODE -ne 0) { throw "INSTALAR_DOINGLIO.bat fallo con codigo $LASTEXITCODE" }
+
+      - name: Verify desktop BAT
+        shell: powershell
+        run: |
+          $desktop = [Environment]::GetFolderPath([Environment+SpecialFolder]::Desktop)
+          $bat = Join-Path $desktop "DoingLio.bat"
+          if (!(Test-Path $bat)) { throw "No se creo $bat" }
+          Write-Host "OK: $bat"
+
+      - name: Execute desktop BAT bootstrap
+        shell: powershell
+        run: |
+          $env:DOINGLIO_CI = "1"
+          $desktop = [Environment]::GetFolderPath([Environment+SpecialFolder]::Desktop)
+          $bat = Join-Path $desktop "DoingLio.bat"
+          & $bat
+          if ($LASTEXITCODE -ne 0) { throw "DoingLio.bat fallo con codigo $LASTEXITCODE" }
+
+      - name: Validate PowerShell launcher syntax
+        shell: powershell
+        run: |
+          $launcher = "C:\Sistemas\DoingLioLauncher\doinglio_launcher.ps1"
+          if (!(Test-Path $launcher)) { throw "No se descargo $launcher" }
+          $tokens = $null
+          $errors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile($launcher,[ref]$tokens,[ref]$errors) | Out-Null
+          if ($errors.Count -gt 0) {
+            $errors | ForEach-Object { Write-Error $_.Message }
+            throw "El launcher PowerShell tiene errores de sintaxis."
+          }
+          Write-Host "OK: sintaxis PowerShell valida"
