@@ -76,6 +76,48 @@ jobs:
           '@ | Set-Content -Encoding UTF8 "$env:RUNNER_TEMP\checkjs.cjs"
           & node "$env:RUNNER_TEMP\checkjs.cjs"
           if($LASTEXITCODE -ne 0){throw "JavaScript invalido"}
+      - name: Arrancar conector PowerShell real y probar health
+        shell: powershell
+        run: |
+          $bridge="C:\Sistemas\DoingLioConnector\bridge\capitan_rodolfo_local.ps1"
+          $app="C:\Sistemas\DoingLioConnector"
+          $out=Join-Path $env:RUNNER_TEMP "bridge-real.out.log"
+          $err=Join-Path $env:RUNNER_TEMP "bridge-real.err.log"
+          $child=Start-Process powershell.exe -ArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-File',$bridge,'-AppDir',$app,'-BackgroundChild') -PassThru -RedirectStandardOutput $out -RedirectStandardError $err
+          try {
+            $found=$null
+            for($i=0;$i -lt 40;$i++){
+              Start-Sleep -Milliseconds 350
+              foreach($p in @(8787,8797,18787,27877,37877,48787,57877)){
+                try {
+                  $r=Invoke-RestMethod -Uri "http://127.0.0.1:$p/health" -TimeoutSec 1
+                  if($r.ok -and $r.service -eq 'Capitan Rodolfo Local'){
+                    $found=@{port=$p;health=$r}; break
+                  }
+                } catch {}
+              }
+              if($found){break}
+            }
+            if(-not $found){
+              if(Test-Path $out){Get-Content $out -Tail 40}
+              if(Test-Path $err){Get-Content $err -Tail 40}
+              throw 'El conector real no responde health'
+            }
+            $expected=(Get-Content (Join-Path $app "VERSION") -Raw).Trim()
+            if([string]$found.health.version -ne $expected){throw "Version no coincide: $($found.health.version) != $expected"}
+            $state=Invoke-RestMethod -Uri "http://127.0.0.1:$($found.port)/api/state" -TimeoutSec 4
+            if($state.connected){throw 'SQL no deberia conectarse en un runner sin instancia'}
+            Write-Host "Conector real listo, version $expected, puerto $($found.port), estado SQL sin credenciales correcto"
+          } finally {
+            Stop-Process -Id $child.Id -Force -ErrorAction SilentlyContinue
+            $pidFile="C:\Sistemas\DoingLio\data\capitan\estado.json"
+            if(Test-Path $pidFile){
+              try {
+                $pidValue=(Get-Content $pidFile -Raw|ConvertFrom-Json).pid
+                if($pidValue){Stop-Process -Id ([int]$pidValue) -Force -ErrorAction SilentlyContinue}
+              } catch {}
+            }
+          }
       - name: Probar proxy SQL mismo origen (servidor simulado)
         shell: powershell
         run: |
