@@ -16,16 +16,16 @@ if not defined DESKTOP goto :error
 set "DEST=%DESKTOP%\DoingLio.bat"
 
 echo [1/2] Descargando acceso actualizado...
-powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Stop'; Invoke-WebRequest -UseBasicParsing -Uri '%RAW%?v=18' -OutFile '%DEST%'"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Stop'; Invoke-WebRequest -UseBasicParsing -Uri '%RAW%' -OutFile '%DEST%'"
 if errorlevel 1 goto :error
-
 if not exist "%DEST%" goto :error
+
 if /I "%DOINGLIO_CI%"=="1" exit /b 0
 
-echo [2/2] Acceso creado:
+echo [2/2] Listo:
 echo       %DEST%
 echo.
-echo Abriendo DoingLio...
+echo A partir de ahora usa DoingLio.bat del Escritorio.
 call "%DEST%"
 timeout /t 1 >nul
 exit /b 0
