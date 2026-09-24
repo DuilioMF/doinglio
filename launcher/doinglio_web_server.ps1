@@ -83,21 +83,37 @@ function Read-ConnectorSafeDiagnostic {
  }
  return $detail
 }
+function Test-PortService([int]$Port,[string]$ExpectedVersion) {
+ if($Port -lt 1024 -or $Port -gt 65535){return $false}
+ try {
+  $h=Invoke-RestMethod -Uri ("http://127.0.0.1:"+$Port+"/health") -TimeoutSec 1
+  return ($h.ok -and $h.service -eq 'Capitan Rodolfo Local' -and
+    [string]$h.version -eq $ExpectedVersion -and $h.apiSqlObject -eq $true)
+ }catch{return $false}
+}
 function Find-ReadyConnector {
- # Recuperación si la instancia tarda más que el launcher. No se aceptan
- # puertos de otra app ni versiones antiguas.
+ # En caso de conflicto Windows elige un puerto libre; el PID del servicio lo
+ # guarda en estado.json. No probar puertos arbitrarios sin verificar /health.
  $d=Read-ConnectorSafeDiagnostic
  if([string]::IsNullOrWhiteSpace($d.expectedVersion)){return $null}
- foreach($port in @(8787,8797,18787,27877,37877,48787,57877)){
+ $ports=@()
+ $file='C:\Sistemas\DoingLio\data\capitan\estado.json'
+ if(Test-Path $file){
   try{
-   $h=Invoke-RestMethod -Uri ("http://127.0.0.1:"+$port+"/health") -TimeoutSec 1
-   if($h.ok -and $h.service -eq 'Capitan Rodolfo Local' -and
-      [string]$h.version -eq [string]$d.expectedVersion -and $h.apiSqlObject -eq $true){
-    $found=@{ok=$true;port=[int]$port;version=[string]$d.expectedVersion;updatedAt=(Get-Date).ToString('o')}
-    $found | ConvertTo-Json | Set-Content -Path $ConnectorState -Encoding UTF8
-    return $found
-   }
+   $st=Get-Content $file -Raw|ConvertFrom-Json
+   $foundPort=0
+   if([int]::TryParse([string]$st.port,[ref]$foundPort) -and
+      $foundPort -ge 1024 -and $foundPort -le 65535){$ports += $foundPort}
   }catch{}
+ }
+ # Dos puertos habituales como respaldo, no esperar siete intentos por request.
+ $ports += @(8787,8797)
+ foreach($port in @($ports | Select-Object -Unique)){
+  if(Test-PortService -Port ([int]$port) -ExpectedVersion ([string]$d.expectedVersion)){
+   $found=@{ok=$true;port=[int]$port;version=[string]$d.expectedVersion;updatedAt=(Get-Date).ToString('o')}
+   $found | ConvertTo-Json | Set-Content -Path $ConnectorState -Encoding UTF8
+   return $found
+  }
  }
  return $null
 }
@@ -106,7 +122,11 @@ function Proxy-Sql($Stream,$Request){
  if(Test-Path $ConnectorState){
   try{$state=Get-Content -Path $ConnectorState -Raw | ConvertFrom-Json}catch{}
  }
- if(-not $state -or -not $state.ok -or -not $state.port){
+ # connector.json podria ser anterior al nuevo arranque. Confirmar servicio y version
+ # ANTES de enviar credenciales de SQL o cualquier otra solicitud.
+ $expected=(Read-ConnectorSafeDiagnostic).expectedVersion
+ if(-not $state -or -not $state.ok -or -not $state.port -or
+    -not (Test-PortService -Port ([int]$state.port) -ExpectedVersion ([string]$expected))){
   $state=Find-ReadyConnector
  }
  if(-not $state -or -not $state.ok -or -not $state.port){
@@ -114,8 +134,8 @@ function Proxy-Sql($Stream,$Request){
   Send-Json $Stream 503 @{ok=$false;error='El conector SQL no esta activo. Revisá el diagnóstico local; se reintenta descubrir el servicio automáticamente.';diagnostic=$diag};return
  }
  $sqlPort=[int]$state.port
- if(@(8787,8797,18787,27877,37877,48787,57877) -notcontains $sqlPort){
-  Send-Json $Stream 503 @{ok=$false;error='Puerto SQL registrado fuera del rango permitido.'};return
+ if($sqlPort -lt 1024 -or $sqlPort -gt 65535){
+  Send-Json $Stream 503 @{ok=$false;error='El conector registro un puerto invalido.'};return
  }
  $path=$Request.path.Substring('/_doinglio_sql'.Length)
  if($path -eq '' -or $path -eq '/'){$path='/'}
