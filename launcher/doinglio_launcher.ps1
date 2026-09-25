@@ -200,7 +200,12 @@ try {
   $runtimeBuild = Join-Path $Runtime 'BUILD'
   if(Test-Path $runtimeBuild){
     $actualBuild = (Get-Content $runtimeBuild -Raw).Trim()
-    if($actualBuild -match '^\d+
+    if($actualBuild -match '^\d+$'){
+      [IO.File]::WriteAllText($CachedBuild,$actualBuild)
+      Log ("Build disponible durante el inicio: D" + $actualBuild)
+    }
+  }
+  Log "Pagina local actualizada"
 }
 catch {
   Log ("ERROR actualizando pagina: " + $_.Exception.Message)
@@ -327,140 +332,6 @@ function Open-ImmersiveDoingLio([string]$Url) {
       )
       $process = Start-Process -FilePath $browser.path -ArgumentList $args -PassThru -ErrorAction Stop
       Log ('D28: ventana inmersiva sin barra con ' + $browser.name + '; PID=' + $process.Id)
-      return $true
-    } catch {
-      Log ('No pude abrir ' + $browser.name + ' en modo aplicacion: ' + $_.Exception.Message)
-    }
-  }
-  Log 'ADVERTENCIA: no se encontro Edge/Chrome funcional; abriendo URL en navegador habitual CON barra.'
-  Start-Process $Url
-  return $false
-}
-
-$desktopUrl = 'http://127.0.0.1:'+$webPort+'/?desktop=1'
-$null = Open-ImmersiveDoingLio $desktopUrl
-exit 0
-){
-      [IO.File]::WriteAllText($CachedBuild,$actualBuild)
-      Log ("Build disponible durante el inicio: D" + $actualBuild)
-    }
-  }
-  Log "Pagina local actualizada"
-}
-catch {
-  Log ("ERROR actualizando pagina: " + $_.Exception.Message)
-  if(Test-Path $BuildRuntime){ Remove-Item $BuildRuntime -Recurse -Force -ErrorAction SilentlyContinue }
-  if(-not (Test-Path (Join-Path $Runtime "index.html"))){ throw }
-}
-finally {
-  Remove-Item $work -Recurse -Force -ErrorAction SilentlyContinue
-}
-
-# 2. Levantar la conexion SQL local, verificar su version y recordar su puerto.
-$ExpectedConnectorVersion = "desconocida"
-if(Test-Path $VersionFile){ $ExpectedConnectorVersion = (Get-Content $VersionFile -Raw).Trim() }
-Log ("Version esperada del conector: "+$ExpectedConnectorVersion)
-if(-not $CI){
-  $connectorPort = Test-Connector
-  if(-not $connectorPort -and (Test-Path $Bridge)){
-    try {
-      $bridgeOut = Join-Path $Connector "bridge.out.log"
-      $bridgeErr = Join-Path $Connector "bridge.err.log"
-      $bridgeProcess = Start-Process -FilePath "powershell.exe" -WindowStyle Hidden -PassThru -ArgumentList @(
-        "-NoProfile","-ExecutionPolicy","Bypass","-File",$Bridge,"-AppDir",$Connector,"-BackgroundChild"
-      ) -RedirectStandardOutput $bridgeOut -RedirectStandardError $bridgeErr
-      Log ("Conector SQL v"+$ExpectedConnectorVersion+" lanzado PID="+$bridgeProcess.Id+"; esperando health. stdout="+$bridgeOut+" stderr="+$bridgeErr)
-    } catch {
-      Log ("ERROR lanzando SQL: " + $_.Exception.Message)
-    }
-  }
-
-  if(-not $connectorPort){
-    for($i=0;$i -lt 30;$i++){
-      Start-Sleep -Milliseconds 500
-      $connectorPort = Test-Connector
-      if($connectorPort){ break }
-    }
-  }
-
-  if($connectorPort){
-    Log ("Conector SQL v$ExpectedConnectorVersion listo puerto " + $connectorPort)
-    try {
-      @{ok=$true;port=[int]$connectorPort;version=$ExpectedConnectorVersion;updatedAt=(Get-Date).ToString("o")} |
-        ConvertTo-Json | Set-Content -Path (Join-Path $Runtime "connector.json") -Encoding UTF8
-    } catch { Log ("No pude escribir connector.json: "+$_.Exception.Message) }
-  } else {
-    Log ("ERROR: el conector SQL v"+$ExpectedConnectorVersion+" no respondio /health luego de 15 segundos")
-    try { if(Test-Path (Join-Path $Connector "bridge.err.log")){ Get-Content (Join-Path $Connector "bridge.err.log") -Tail 12 | ForEach-Object { Log ("bridge.err: "+$_) } } } catch {}
-    try { if(Test-Path "C:\Sistemas\DoingLio\data\capitan\estado.json"){ Log ("Existe estado local en C:\Sistemas\DoingLio\data\capitan\estado.json") } } catch {}
-    try {
-      @{ok=$false;port=$null;version=$ExpectedConnectorVersion;updatedAt=(Get-Date).ToString("o")} |
-        ConvertTo-Json | Set-Content -Path (Join-Path $Runtime "connector.json") -Encoding UTF8
-    } catch {}
-  }
-}
-
-# 3. Servir la copia local actualizada.
-$webPort = Get-FreePort
-$web = Start-Process -FilePath "powershell.exe" -WindowStyle Hidden -PassThru -ArgumentList @(
-  "-NoProfile","-ExecutionPolicy","Bypass","-File",$ServerScript,"-Root",$Runtime,"-Port",$webPort
-)
-[IO.File]::WriteAllText($WebPidFile,[string]$web.Id)
-[IO.File]::WriteAllText($WebPortFile,[string]$webPort)
-
-$ready=$false
-for($i=0;$i -lt 20;$i++){
-  Start-Sleep -Milliseconds 150
-  try {
-    $h=Invoke-RestMethod -Uri ("http://127.0.0.1:"+$webPort+"/_doinglio_health") -TimeoutSec 1
-    if($h.ok){ $ready=$true; break }
-  } catch {}
-}
-if(-not $ready){
-  try{ Stop-Process -Id $web.Id -Force }catch{}
-  throw "La pagina local no pudo iniciar."
-}
-Log ("Web local lista en puerto " + $webPort)
-
-if($CI){
-  try{ Stop-Process -Id $web.Id -Force }catch{}
-  exit 0
-}
-
-# D27: abrir la web local en una ventana inmersiva propia.
-# Start-Process de una URL abre el navegador NORMAL (barra de direcciones).
-# Modo --app evita pestanas/barra y --start-fullscreen oculta tambien el
-# marco. El perfil propio evita que una ventana anterior absorba los flags.
-function Open-ImmersiveDoingLio([string]$Url) {
-  $bases = @(
-    [Environment]::GetEnvironmentVariable('ProgramFiles(x86)'),
-    [Environment]::GetEnvironmentVariable('ProgramFiles'),
-    [Environment]::GetEnvironmentVariable('LOCALAPPDATA')
-  )
-  $candidates = New-Object 'System.Collections.Generic.List[object]'
-  foreach($base in $bases) {
-    if([string]::IsNullOrWhiteSpace($base)){continue}
-    foreach($relative in @('Microsoft\Edge\Application\msedge.exe','Google\Chrome\Application\chrome.exe')) {
-      $executable = Join-Path $base $relative
-      if((Test-Path $executable) -and -not @($candidates | Where-Object { $_.path -eq $executable }).Count) {
-        $candidates.Add(@{path=$executable;name=if($relative.StartsWith('Microsoft')){'Edge'}else{'Chrome'}})
-      }
-    }
-  }
-  foreach($browser in $candidates) {
-    try {
-      $profile = Join-Path $Root ('browser-profile-' + $browser.name.ToLowerInvariant())
-      New-Item -ItemType Directory -Path $profile -Force | Out-Null
-      $args = @(
-        '--app=' + $Url,
-        '--start-fullscreen',
-        '--new-window',
-        '--no-first-run',
-        '--no-default-browser-check',
-        '--user-data-dir="' + $profile + '"'
-      )
-      $process = Start-Process -FilePath $browser.path -ArgumentList $args -PassThru -ErrorAction Stop
-      Log ('D27: ventana inmersiva sin barra con ' + $browser.name + '; PID=' + $process.Id)
       return $true
     } catch {
       Log ('No pude abrir ' + $browser.name + ' en modo aplicacion: ' + $_.Exception.Message)
