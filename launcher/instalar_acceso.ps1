@@ -38,6 +38,9 @@ try {
     [IO.File]::WriteAllBytes($Icon,$bytes)
     Remove-Item $encodedPath -Force
 
+    # Instalar también el cerebro visible durante el reloj de inicio.
+    Download-Atomic ($Base + "/brain-davinci.svg") (Join-Path $Root "brain-davinci.svg")
+
     # La apertura silenciosa muestra el mismo reloj 4:10 de la portada
     # mientras el launcher descarga y activa la copia local.
     Download-Atomic ($Base + "/launcher/reloj_inicio.hta") $Splash
