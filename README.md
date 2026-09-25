@@ -59,3 +59,6 @@ GitHub es la fuente de código y GitHub Pages publica `main`. No usar copias de 
 
 ## D29 — etiqueta de versión visible
 El build de DoingLio se lee del archivo `BUILD` y aparece debajo del nombre, separado de los controles de la derecha. En el reloj de apertura queda arriba a la izquierda, junto a la X. El lanzador adelanta la lectura de BUILD para actualizar la etiqueta aun durante la apertura anterior; el nuevo estilo del reloj aparece tras actualizar su archivo local.
+
+## D30 — diagnóstico real del conector SQL
+El proxy usa el puerto registrado por el conector y todos los puertos de reserva. Una respuesta de versión diferente se informa como incompatibilidad, no como caída de SQL Server. Diagnóstico: `/_doinglio_diagnostic`; conserva credenciales. El servidor PowerShell utiliza UTF-8 con BOM para evitar caracteres incorrectos en Windows PowerShell 5.1. Verificar en la PC antes de marcar la conexión real como probada.
