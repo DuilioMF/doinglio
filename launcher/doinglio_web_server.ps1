@@ -228,7 +228,7 @@ try{
      if($page -notmatch 'doinglio-window\.js'){
        $injection += '<script src="/doinglio-window.js" defer></script>'
      }
-     $headEnd=New-Object System.Text.RegularExpressions.Regex('(?i)</head>')
+     $headEnd=[regex]::new('(?i)</head>')
      if($headEnd.IsMatch($page)){$page=$headEnd.Replace($page,($injection+'</head>'),1)}
      else{$page=$injection+$page}
      $bytes=[Text.Encoding]::UTF8.GetBytes($page)
