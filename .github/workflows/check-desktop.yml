@@ -1,0 +1,34 @@
+name: Verify desktop launcher and shared window control
+on:
+  push:
+    branches: [main, "fix/**"]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  desktop-smoke:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify PowerShell 5.1 syntax
+        shell: powershell
+        run: |
+          $files = @('launcher/doinglio_launcher.ps1', 'launcher/doinglio_web_server.ps1', 'launcher/abrir_doinglio.ps1', 'launcher/instalar_acceso.ps1')
+          foreach($file in $files) {
+            $tokens = $null; $errors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path $file).Path, [ref]$tokens, [ref]$errors) | Out-Null
+            if($errors.Count -gt 0) {
+              $errors | ForEach-Object { Write-Error ("$file : " + $_.Message) }
+              throw "Error de sintaxis PowerShell: $file"
+            }
+          }
+      - name: Exercise local HTTP server and guarded close
+        shell: powershell
+        run: ./tests/desktop-http-smoke.ps1
+      - name: Verify shared UI and splash
+        run: node tests/desktop-contract.test.js

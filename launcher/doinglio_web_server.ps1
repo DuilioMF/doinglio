@@ -6,6 +6,7 @@ $ErrorActionPreference = "Stop"
 $Root = [IO.Path]::GetFullPath($Root)
 $ConnectorState = Join-Path $Root "connector.json"
 $MaxBody = 131072
+$ExitToken = [guid]::NewGuid().ToString('N') # token efímero para cerrar solo el escritorio local
 function Get-Mime([string]$Path){
  switch([IO.Path]::GetExtension($Path).ToLowerInvariant()){
  '.html'{'text/html; charset=utf-8'} '.htm'{'text/html; charset=utf-8'}
@@ -184,9 +185,29 @@ try{
    if($req.method -ne 'GET' -and $req.method -ne 'POST'){Send-Text $stream 405 'Metodo no permitido';continue}
    $origin=[string]$req.headers['origin']
    if($origin -and @("http://127.0.0.1:$Port","http://localhost:$Port") -notcontains $origin){Send-Text $stream 403 'Origen no permitido';continue}
+   $path=($req.path -split '\?')[0]
+   if($path -eq '/_doinglio_exit'){
+     if($req.method -ne 'POST'){Send-Text $stream 405 'Solo POST';continue}
+     if($origin -ne ("http://127.0.0.1:" + $Port)){Send-Text $stream 403 'Origen no autorizado';continue}
+     if([string]$req.headers['x-doinglio-exit'] -ne $ExitToken){Send-Text $stream 403 'Cierre no autorizado';continue}
+     Send-Json $stream 200 @{ok=$true}
+     # Solo matar procesos bajo el perfil exclusivo. Nunca cerrar el navegador personal.
+     Start-Sleep -Milliseconds 350
+     try {
+       $managed=@(Get-CimInstance Win32_Process -Filter "Name='msedge.exe' OR Name='chrome.exe'" |
+         Where-Object { $_.CommandLine -and
+           ($_.CommandLine -match [regex]::Escape('C:\Sistemas\DoingLioLauncher\browser-profile-')) })
+       $appPattern='--app=http://127\.0\.0\.1:' + $Port + '(?:/|\?)'
+       $leaders=@($managed | Where-Object { $_.CommandLine -match $appPattern })
+       if($leaders.Count -gt 0){
+         foreach($p in $managed){try{Stop-Process -Id $p.ProcessId -Force -ErrorAction Stop}catch{}}
+       }
+     }catch{}
+     break
+   }
    if($req.path -match '^/_doinglio_sql(/|$|\?)'){Proxy-Sql $stream $req;continue}
    if($req.method -ne 'GET'){Send-Text $stream 405 'Solo GET para archivos de la aplicacion';continue}
-   $path=($req.path -split '\?')[0]
+   
    if($path -eq '/_doinglio_health'){
      Send-Json $stream 200 @{ok=$true;service='DoingLio Local';port=$Port;connectorStateFile=$ConnectorState};continue
    }
@@ -200,7 +221,19 @@ try{
    $prefix=$Root.TrimEnd('\')+'\'
    if(-not $file.StartsWith($prefix,[StringComparison]::OrdinalIgnoreCase)){Send-Text $stream 403 'Acceso denegado';continue}
    if(-not (Test-Path $file -PathType Leaf)){Send-Text $stream 404 'Archivo no encontrado';continue}
-   Send-Response $stream 200 (Get-Mime $file) ([IO.File]::ReadAllBytes($file))
+   $bytes=[IO.File]::ReadAllBytes($file)
+   if([IO.Path]::GetExtension($file).ToLowerInvariant() -in @('.html','.htm')){
+     $page=[Text.Encoding]::UTF8.GetString($bytes)
+     $injection='<script>window.__doinglioExitToken=' + ($ExitToken | ConvertTo-Json -Compress) + ';</script>'
+     if($page -notmatch 'doinglio-window\.js'){
+       $injection += '<script src="/doinglio-window.js" defer></script>'
+     }
+     $headEnd=[regex]::new('(?i)</head>')
+     if($headEnd.IsMatch($page)){$page=$headEnd.Replace($page,($injection+'</head>'),1)}
+     else{$page=$injection+$page}
+     $bytes=[Text.Encoding]::UTF8.GetBytes($page)
+   }
+   Send-Response $stream 200 (Get-Mime $file) $bytes
   }catch{try{Send-Json $stream 500 @{error=$_.Exception.Message}}catch{}}
   finally{try{$client.Close()}catch{}}
  }

@@ -13,10 +13,12 @@ $ServerScript = Join-Path $Root "doinglio_web_server.ps1"
 $WebPidFile = Join-Path $Root "web.pid"
 $WebPortFile = Join-Path $Root "web.port"
 $Log = Join-Path $Root "launcher.log"
+$CancelFlag = Join-Path $Root "cancel.flag"
+$CachedBuild = Join-Path $Root "last_build.txt"
 $CI = ($env:DOINGLIO_CI -eq "1")
 
 New-Item -ItemType Directory -Force -Path $Root,$Connector,$BridgeDir | Out-Null
-Add-Content -Path $Log -Value ("["+(Get-Date).ToString("s")+"] Inicio DoingLio D27")
+Add-Content -Path $Log -Value ("["+(Get-Date).ToString("s")+"] Inicio DoingLio D28")
 
 function Log([string]$Message){
   Add-Content -Path $Log -Value ("["+(Get-Date).ToString("s")+"] "+$Message)
@@ -194,6 +196,15 @@ try {
 
   if(Test-Path $Runtime){ Remove-Item $Runtime -Recurse -Force }
   Move-Item $BuildRuntime $Runtime
+  # Publicar el build descargado para el reloj de inicio.
+  $runtimeBuild = Join-Path $Runtime 'BUILD'
+  if(Test-Path $runtimeBuild){
+    $actualBuild = (Get-Content $runtimeBuild -Raw).Trim()
+    if($actualBuild -match '^\d+$'){
+      [IO.File]::WriteAllText($CachedBuild,$actualBuild)
+      Log ("Build disponible durante el inicio: D" + $actualBuild)
+    }
+  }
   Log "Pagina local actualizada"
 }
 catch {
@@ -203,6 +214,12 @@ catch {
 }
 finally {
   Remove-Item $work -Recurse -Force -ErrorAction SilentlyContinue
+}
+
+# La X del reloj cancela el inicio antes de habilitar la conexión SQL.
+if(Test-Path $CancelFlag){
+  Log 'Inicio cancelado desde la X del reloj; no abrir navegador.'
+  exit 0
 }
 
 # 2. Levantar la conexion SQL local, verificar su version y recordar su puerto.
@@ -270,13 +287,18 @@ if(-not $ready){
   throw "La pagina local no pudo iniciar."
 }
 Log ("Web local lista en puerto " + $webPort)
+if(Test-Path $CancelFlag){
+  Log 'Inicio cancelado; no abrir navegador.'
+  try{Stop-Process -Id $web.Id -Force}catch{}
+  exit 0
+}
 
 if($CI){
   try{ Stop-Process -Id $web.Id -Force }catch{}
   exit 0
 }
 
-# D27: abrir la web local en una ventana inmersiva propia.
+# D28: abrir la web local en una ventana inmersiva propia.
 # Start-Process de una URL abre el navegador NORMAL (barra de direcciones).
 # Modo --app evita pestanas/barra y --start-fullscreen oculta tambien el
 # marco. El perfil propio evita que una ventana anterior absorba los flags.
@@ -309,7 +331,7 @@ function Open-ImmersiveDoingLio([string]$Url) {
         '--user-data-dir="' + $profile + '"'
       )
       $process = Start-Process -FilePath $browser.path -ArgumentList $args -PassThru -ErrorAction Stop
-      Log ('D27: ventana inmersiva sin barra con ' + $browser.name + '; PID=' + $process.Id)
+      Log ('D28: ventana inmersiva sin barra con ' + $browser.name + '; PID=' + $process.Id)
       return $true
     } catch {
       Log ('No pude abrir ' + $browser.name + ' en modo aplicacion: ' + $_.Exception.Message)
