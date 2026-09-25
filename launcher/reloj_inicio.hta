@@ -29,6 +29,7 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;color:#f7edd
 .build{position:absolute;left:78px;top:19px;z-index:6;min-width:128px;padding:11px 16px;border:1px solid #d89f61;border-radius:12px;background:#241910ee;box-shadow:0 0 26px #d9823b27;font:bold 16px/1.4 Segoe UI,Arial,sans-serif;letter-spacing:2px;color:#ffdb9f;text-align:left}
 .close-app{position:absolute;left:14px;top:14px;z-index:5;width:48px;height:48px;border-radius:12px;border:1px solid #bb8e57;background:#20160f;color:#ffe0ae;font:normal 30px/1 Segoe UI,Arial,sans-serif;cursor:pointer}
 .close-app:hover,.close-app:focus{background:#a45932;color:#fff}
+.connector-build{position:absolute;left:80px;top:76px;z-index:6;font:600 12px Segoe UI,Arial;color:#cda66f}html.light .connector-build{color:#80572f}
 .theme-switch{position:absolute;right:18px;top:19px;z-index:7;padding:10px 14px;border:1px solid #bd8e55;border-radius:10px;background:#22180f;color:#f5dbb7;font:600 13px Segoe UI,Arial;cursor:pointer}
 html.light,html.light body{background:#f4ebde;color:#362617}
 html.light .main{background:radial-gradient(circle at 50% 45%,#fff8eb 0,#eaddc7 80%,#ddcfb8 100%)}
@@ -40,6 +41,7 @@ html.light .doom-orbit{stroke:#8e663e55}html.light .doomsday-clock-bg{filter:dro
 var started=new Date().getTime();
 var versionPath='C:\\Sistemas\\DoingLioLauncher\\last_build.txt';
 var themePath='C:\\Sistemas\\DoingLioLauncher\\theme.txt';
+var connectorVersionPath='C:\\Sistemas\\DoingLioLauncher\\last_connector.txt';
 function themeFile(){return new ActiveXObject('Scripting.FileSystemObject');}
 function applyTheme(value,save){
  var theme=value==='light'?'light':'dark';
@@ -59,6 +61,14 @@ function refreshBuild(){
    var f=fs.OpenTextFile(versionPath,1,false);
    var v=f.ReadAll().replace(/\s/g,'');f.Close();
    if(/^\d+$/.test(v))document.getElementById('startup-build').innerText='D\u00b7'+v;
+ }catch(e){}
+}
+function refreshConnectorVersion(){
+ try{
+   var fs=new ActiveXObject('Scripting.FileSystemObject');
+   if(!fs.FileExists(connectorVersionPath))return;
+   var f=fs.OpenTextFile(connectorVersionPath,1,false),v=f.ReadAll().replace(/\s/g,'');f.Close();
+   if(/^[A-Za-z0-9._-]+$/.test(v))document.getElementById('startup-connector').innerText='SQL v'+v;
  }catch(e){}
 }
 function cancelStartup(){
@@ -88,7 +98,7 @@ function animate(){
    document.getElementById('dots').innerText='ACTUALIZANDO PROYECTOS'+dots;
  }catch(e){}
 }
-window.onload=function(){fullscreenWindow();loadTheme();refreshBuild();animate();window.setInterval(animate,50);window.setInterval(refreshBuild,850)}
+window.onload=function(){fullscreenWindow();loadTheme();refreshBuild();refreshConnectorVersion();animate();window.setInterval(animate,50);window.setInterval(refreshBuild,850);window.setInterval(refreshConnectorVersion,850)}
 </script>
 </head>
 <body>
@@ -96,6 +106,7 @@ window.onload=function(){fullscreenWindow();loadTheme();refreshBuild();animate()
  <button type="button" class="close-app" title="Cancelar inicio y cerrar" aria-label="Cancelar inicio y cerrar" onclick="cancelStartup()">&#215;</button>
  <button type="button" class="theme-switch" id="theme-switch" onclick="toggleTheme()">Activar claro</button>
  <div class="build" id="startup-build" title="Versión de DoingLio" role="status" aria-live="polite">D&#183;...</div>
+ <div class="connector-build" id="startup-connector" role="status">SQL · verificando</div>
  <div class="clock-bg" aria-hidden="true">
       <svg id="clock" class="doomsday-clock-bg" viewBox="0 0 500 500">
       <defs>
