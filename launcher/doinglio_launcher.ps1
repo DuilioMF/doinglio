@@ -18,7 +18,7 @@ $CachedBuild = Join-Path $Root "last_build.txt"
 $CI = ($env:DOINGLIO_CI -eq "1")
 
 New-Item -ItemType Directory -Force -Path $Root,$Connector,$BridgeDir | Out-Null
-Add-Content -Path $Log -Value ("["+(Get-Date).ToString("s")+"] Inicio DoingLio D28")
+Add-Content -Path $Log -Value ("["+(Get-Date).ToString("s")+"] Inicio DoingLio D31")
 
 function Log([string]$Message){
   Add-Content -Path $Log -Value ("["+(Get-Date).ToString("s")+"] "+$Message)
@@ -27,8 +27,9 @@ function Log([string]$Message){
 function Download-Text([string]$Url,[string]$OutFile){
   Invoke-WebRequest -UseBasicParsing -Uri $Url -OutFile $OutFile -TimeoutSec 30
 }
-# Actualizar el splash y VBS del acceso ya instalado, sin recrear el acceso
-# ni alterar el icono. Este cambio aparece desde la siguiente apertura.
+# Actualizar el reloj, el cerebro SVG y el VBS sin tocar el acceso del usuario.
+# Si falta el icono del cerebro, recuperarlo desde la fuente canónica existente.
+# El cambio aparece en la SIGUIENTE apertura; la ventana abierta ya usa su HTA cargado.
 if(-not $CI -and (Test-Path (Join-Path $Root "DoingLioInicio.vbs"))){
   foreach($item in @(
     @{source="reloj_inicio.hta";dest="reloj_inicio.hta"},
@@ -43,6 +44,30 @@ if(-not $CI -and (Test-Path (Join-Path $Root "DoingLioInicio.vbs"))){
     } catch {
       Log ("Reloj de apertura: no pude actualizar "+$item.source+": "+$_.Exception.Message)
     } finally {Remove-Item $tmp -Force -ErrorAction SilentlyContinue}
+  }
+}
+
+
+# El splash muestra el mismo cerebro naranja del Cuaderno Maestro.
+# Actualizar SVG incluso si el acceso fue instalado en una versión anterior.
+if(-not $CI){
+  $brainSvg=Join-Path $Root 'brain-davinci.svg'
+  $brainTemp=$brainSvg+'.download'
+  try{
+    Download-Text 'https://raw.githubusercontent.com/DuilioMF/doinglio/main/brain-davinci.svg' $brainTemp
+    if((Get-Item $brainTemp).Length -lt 200){throw 'Cerebro SVG incompleto'}
+    Move-Item $brainTemp $brainSvg -Force
+  }catch{Log ('Cerebro en el inicio: '+$_.Exception.Message)}
+  finally{Remove-Item $brainTemp -Force -ErrorAction SilentlyContinue}
+  $brainIco=Join-Path $Root 'brain-davinci.ico'
+  if(-not (Test-Path $brainIco)){
+    $b64=Join-Path $Root 'brain-davinci.ico.b64'
+    try{
+      Download-Text 'https://raw.githubusercontent.com/DuilioMF/doinglio/main/launcher/brain-davinci.ico.b64' $b64
+      [IO.File]::WriteAllBytes($brainIco,[Convert]::FromBase64String(([IO.File]::ReadAllText($b64)).Trim()))
+      Log 'Ícono de cerebro ICO restaurado sin modificar el acceso del escritorio'
+    }catch{Log ('No se pudo recuperar brain-davinci.ico: '+$_.Exception.Message)}
+    finally{Remove-Item $b64 -Force -ErrorAction SilentlyContinue}
   }
 }
 
@@ -298,7 +323,7 @@ if($CI){
   exit 0
 }
 
-# D28: abrir la web local en una ventana inmersiva propia.
+# D31: abrir la web local en una ventana inmersiva propia.
 # Start-Process de una URL abre el navegador NORMAL (barra de direcciones).
 # Modo --app evita pestanas/barra y --start-fullscreen oculta tambien el
 # marco. El perfil propio evita que una ventana anterior absorba los flags.
@@ -331,7 +356,7 @@ function Open-ImmersiveDoingLio([string]$Url) {
         '--user-data-dir="' + $profile + '"'
       )
       $process = Start-Process -FilePath $browser.path -ArgumentList $args -PassThru -ErrorAction Stop
-      Log ('D28: ventana inmersiva sin barra con ' + $browser.name + '; PID=' + $process.Id)
+      Log ('D31: ventana inmersiva sin barra con ' + $browser.name + '; PID=' + $process.Id)
       return $true
     } catch {
       Log ('No pude abrir ' + $browser.name + ' en modo aplicacion: ' + $_.Exception.Message)
