@@ -56,3 +56,6 @@ GitHub es la fuente de código y GitHub Pages publica `main`. No usar copias de 
 - El servidor local inyecta automáticamente `doinglio-window.js` en **todas** las páginas HTML: Cuaderno Maestro, Capitán Rodolfo, Ruben y futuros especialistas. Comparten una X a la izquierda.
 - Al pulsar X, solo se cierra la ventana del perfil exclusivo de DoingLio y termina el servidor web de esa sesión; el conector SQL residente y los navegadores personales no se detienen.
 - Cada especialista sigue teniendo su versión independiente. Los sitios públicos abiertos como pestañas normales no pueden ni deben cerrar el navegador del usuario.
+
+## D29 — etiqueta de versión visible
+El build de DoingLio se lee del archivo `BUILD` y aparece debajo del nombre, separado de los controles de la derecha. En el reloj de apertura queda arriba a la izquierda, junto a la X. El lanzador adelanta la lectura de BUILD para actualizar la etiqueta aun durante la apertura anterior; el nuevo estilo del reloj aparece tras actualizar su archivo local.
