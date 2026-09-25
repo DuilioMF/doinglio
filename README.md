@@ -62,3 +62,6 @@ El build de DoingLio se lee del archivo `BUILD` y aparece debajo del nombre, sep
 
 ## D30 — diagnóstico real del conector SQL
 El proxy usa el puerto registrado por el conector y todos los puertos de reserva. Una respuesta de versión diferente se informa como incompatibilidad, no como caída de SQL Server. Diagnóstico: `/_doinglio_diagnostic`; conserva credenciales. El servidor PowerShell utiliza UTF-8 con BOM para evitar caracteres incorrectos en Windows PowerShell 5.1. Verificar en la PC antes de marcar la conexión real como probada.
+
+## D31 — cerebro en apertura
+El acceso del escritorio conserva `brain-davinci.ico` (no se recrea el acceso). El HTA de reloj especifica `HTA:APPLICATION ICON` y muestra el mismo cerebro naranja durante el arranque. El conector descarga el SVG local y recupera el ICO si falta; el servidor sirve el cerebro como favicon en ventanas locales. Los navegadores pueden tardar en actualizar un ícono de barra de tareas previamente almacenado por Windows; prueba funcional pendiente en la PC.
