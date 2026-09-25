@@ -1,6 +1,11 @@
 Set app = CreateObject("WScript.Shell")
 q = Chr(34)
 splashPath = "C:\Sistemas\DoingLioLauncher\reloj_inicio.hta"
+cancelPath = "C:\Sistemas\DoingLioLauncher\cancel.flag"
+Set fs = CreateObject("Scripting.FileSystemObject")
+On Error Resume Next
+If fs.FileExists(cancelPath) Then fs.DeleteFile cancelPath, True
+On Error GoTo 0
 Set splash = Nothing
 On Error Resume Next
 If CreateObject("Scripting.FileSystemObject").FileExists(splashPath) Then
