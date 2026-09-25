@@ -16,7 +16,7 @@ $Log = Join-Path $Root "launcher.log"
 $CI = ($env:DOINGLIO_CI -eq "1")
 
 New-Item -ItemType Directory -Force -Path $Root,$Connector,$BridgeDir | Out-Null
-Add-Content -Path $Log -Value ("["+(Get-Date).ToString("s")+"] Inicio DoingLio D26")
+Add-Content -Path $Log -Value ("["+(Get-Date).ToString("s")+"] Inicio DoingLio D27")
 
 function Log([string]$Message){
   Add-Content -Path $Log -Value ("["+(Get-Date).ToString("s")+"] "+$Message)
@@ -276,5 +276,50 @@ if($CI){
   exit 0
 }
 
-Start-Process ("http://127.0.0.1:"+$webPort+"/?desktop=1")
+# D27: abrir la web local en una ventana inmersiva propia.
+# Start-Process de una URL abre el navegador NORMAL (barra de direcciones).
+# Modo --app evita pestanas/barra y --start-fullscreen oculta tambien el
+# marco. El perfil propio evita que una ventana anterior absorba los flags.
+function Open-ImmersiveDoingLio([string]$Url) {
+  $bases = @(
+    [Environment]::GetEnvironmentVariable('ProgramFiles(x86)'),
+    [Environment]::GetEnvironmentVariable('ProgramFiles'),
+    [Environment]::GetEnvironmentVariable('LOCALAPPDATA')
+  )
+  $candidates = New-Object 'System.Collections.Generic.List[object]'
+  foreach($base in $bases) {
+    if([string]::IsNullOrWhiteSpace($base)){continue}
+    foreach($relative in @('Microsoft\Edge\Application\msedge.exe','Google\Chrome\Application\chrome.exe')) {
+      $executable = Join-Path $base $relative
+      if((Test-Path $executable) -and -not @($candidates | Where-Object { $_.path -eq $executable }).Count) {
+        $candidates.Add(@{path=$executable;name=if($relative.StartsWith('Microsoft')){'Edge'}else{'Chrome'}})
+      }
+    }
+  }
+  foreach($browser in $candidates) {
+    try {
+      $profile = Join-Path $Root ('browser-profile-' + $browser.name.ToLowerInvariant())
+      New-Item -ItemType Directory -Path $profile -Force | Out-Null
+      $args = @(
+        '--app=' + $Url,
+        '--start-fullscreen',
+        '--new-window',
+        '--no-first-run',
+        '--no-default-browser-check',
+        '--user-data-dir="' + $profile + '"'
+      )
+      $process = Start-Process -FilePath $browser.path -ArgumentList $args -PassThru -ErrorAction Stop
+      Log ('D27: ventana inmersiva sin barra con ' + $browser.name + '; PID=' + $process.Id)
+      return $true
+    } catch {
+      Log ('No pude abrir ' + $browser.name + ' en modo aplicacion: ' + $_.Exception.Message)
+    }
+  }
+  Log 'ADVERTENCIA: no se encontro Edge/Chrome funcional; abriendo URL en navegador habitual CON barra.'
+  Start-Process $Url
+  return $false
+}
+
+$desktopUrl = 'http://127.0.0.1:'+$webPort+'/?desktop=1'
+$null = Open-ImmersiveDoingLio $desktopUrl
 exit 0
