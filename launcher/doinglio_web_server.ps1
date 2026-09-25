@@ -246,6 +246,7 @@ try{
    if([IO.Path]::GetExtension($file).ToLowerInvariant() -in @('.html','.htm')){
      $page=[Text.Encoding]::UTF8.GetString($bytes)
      $injection='<script>window.__doinglioExitToken=' + ($ExitToken | ConvertTo-Json -Compress) + ';</script>'
+     if($page -notmatch '(?i)<link[^>]+rel=["''](?:shortcut )?icon'){$injection += '<link rel="icon" type="image/svg+xml" href="/brain-davinci.svg">'}
      if($page -notmatch 'doinglio-window\.js'){
        $injection += '<script src="/doinglio-window.js" defer></script>'
      }
