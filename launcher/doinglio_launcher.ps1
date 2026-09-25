@@ -15,6 +15,8 @@ $WebPortFile = Join-Path $Root "web.port"
 $Log = Join-Path $Root "launcher.log"
 $CancelFlag = Join-Path $Root "cancel.flag"
 $CachedBuild = Join-Path $Root "last_build.txt"
+$CachedConnector = Join-Path $Root "last_connector.txt"
+$ThemeFile = Join-Path $Root "theme.txt"
 $CI = ($env:DOINGLIO_CI -eq "1")
 
 New-Item -ItemType Directory -Force -Path $Root,$Connector,$BridgeDir | Out-Null
@@ -176,6 +178,8 @@ try {
   # El codigo descargado y el bridge residente deben quedar en la MISMA version.
   # Antes de reemplazar el archivo, retirar solo instancias de nuestro conector viejo.
   $NewConnectorVersion = (Get-Content (Join-Path $BuildRuntime "capitan-rodolfo\VERSION") -Raw).Trim()
+  # Mostrar al reloj la versión descargada (no la de un proceso viejo).
+  [IO.File]::WriteAllText($CachedConnector,$NewConnectorVersion)
   if(-not $CI){
     $oldRunning = $false
     foreach($port in @(Get-ConnectorCandidatePorts)){
@@ -231,6 +235,9 @@ try {
     }
   }
   Log "Pagina local actualizada"
+  # La preferencia del reloj se comparte con la app a través de la URL local.
+  $SelectedTheme = "dark"
+  if(Test-Path $ThemeFile){$candidate=(Get-Content $ThemeFile -Raw).Trim();if($candidate -in @("light","dark")){$SelectedTheme=$candidate}}
 }
 catch {
   Log ("ERROR actualizando pagina: " + $_.Exception.Message)
@@ -367,6 +374,12 @@ function Open-ImmersiveDoingLio([string]$Url) {
   return $false
 }
 
-$desktopUrl = 'http://127.0.0.1:'+$webPort+'/?desktop=1'
+# No mostrar una aplicación parcialmente actualizada si el Explorador SQL es incompatible.
+# El usuario recibe un mensaje claro en el log; la verificación de Windows es obligatoria.
+if(-not $CI -and -not $connectorPort){
+  try{Stop-Process -Id $web.Id -Force -ErrorAction SilentlyContinue}catch{}
+  throw ("Inicio detenido: no se verificó el conector SQL v"+$ExpectedConnectorVersion+" con apiSqlObject=true. Consultá launcher.log y bridge.err.log.")
+}
+$desktopUrl = 'http://127.0.0.1:'+$webPort+'/?desktop=1&theme='+$SelectedTheme
 $null = Open-ImmersiveDoingLio $desktopUrl
 exit 0
