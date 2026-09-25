@@ -6,5 +6,8 @@
  controls.appendChild(button);
  const oldBack=document.querySelector('a.doinglio-home,a.back,.top a[href="index.html"]');
  if(oldBack){controls.appendChild(oldBack);oldBack.className='control-back';}
- document.body.appendChild(controls);apply(document.documentElement.dataset.theme==='light'?'light':'dark',false);
+ document.body.appendChild(controls);
+ const requested=new URLSearchParams(location.search).get('theme');
+ const valid=requested==='light'||requested==='dark';
+ apply(valid?requested:(document.documentElement.dataset.theme==='light'?'light':'dark'),valid);
 })();
