@@ -19,6 +19,8 @@ assert(home.includes('<div class="code" id="build-code"'), 'Visible main build i
 assert(home.includes('rel="icon" type="image/svg+xml" href="brain-davinci.svg"'), 'DoingLio app favicon uses brain');
 assert(home.indexOf('id="build-code"') < home.indexOf('</header>'), 'Build badge is inside header');
 assert(splash.includes('onclick="cancelStartup()"'), 'Startup X cancels launch');
+assert(splash.includes('theme.txt') && splash.includes('toggleTheme()'), 'Splash offers persisted theme');
+assert(splash.includes('html.light .main'), 'Splash light palette is implemented');
 assert(read('BUILD').trim() === '31', 'Expected DoingLio build D31');
 const server = read('launcher/doinglio_web_server.ps1');
 assert(server.includes('doinglio-window.js'), 'Server injects shared X into all local HTML');
@@ -31,6 +33,8 @@ assert(server.includes("'/ _doinglio_exit'".replace(' ', '')), 'Local exit endpo
 assert(server.includes('browser-profile-'), 'Only isolated browser profiles may be killed');
 const launcher = read('launcher/doinglio_launcher.ps1');
 assert(launcher.includes('last_build.txt'), 'Launcher keeps installed build for splash');
+assert(launcher.includes('apiSqlObject=true') && launcher.includes('if(-not $CI -and -not $connectorPort)'), 'Desktop fails closed when SQL capability is unavailable');
+assert(launcher.includes("'/?desktop=1&theme='"), 'Launcher passes splash theme to web');
 assert((launcher.match(/if\(Test-Path \$CancelFlag\)/g) || []).length === 2,
        'Cancellation is respected before SQL and before opening browser');
 assert(read('launcher/DoingLioInicio.vbs').includes('fs.DeleteFile cancelPath'),
