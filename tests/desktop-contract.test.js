@@ -21,6 +21,7 @@ assert(home.indexOf('id="build-code"') < home.indexOf('</header>'), 'Build badge
 assert(splash.includes('onclick="cancelStartup()"'), 'Startup X cancels launch');
 assert(splash.includes('theme.txt') && splash.includes('toggleTheme()'), 'Splash offers persisted theme');
 assert(splash.includes('html.light .main'), 'Splash light palette is implemented');
+assert(splash.includes('startup-connector') && splash.includes('last_connector.txt'), 'Splash shows real downloaded connector version');
 assert(read('BUILD').trim() === '31', 'Expected DoingLio build D31');
 const server = read('launcher/doinglio_web_server.ps1');
 assert(server.includes('doinglio-window.js'), 'Server injects shared X into all local HTML');
