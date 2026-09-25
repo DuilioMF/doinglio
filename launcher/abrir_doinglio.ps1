@@ -10,7 +10,7 @@ function Log([string]$Text){
  Add-Content -Path $Log -Value ("["+(Get-Date).ToString("s")+"] "+$Text)
 }
 try {
- Log "D22: iniciado desde el icono de cerebro"
+ Log "Inicio desde icono de cerebro; build real en BUILD"
  $Temp = "$Launcher.download"
  try {
    Invoke-WebRequest -UseBasicParsing -Uri $Url -OutFile $Temp -TimeoutSec 30
