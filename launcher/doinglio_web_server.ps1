@@ -1,4 +1,4 @@
-param(
+﻿param(
   [Parameter(Mandatory=$true)][string]$Root,
   [int]$Port = 8790
 )
@@ -7,6 +7,7 @@ $Root = [IO.Path]::GetFullPath($Root)
 $ConnectorState = Join-Path $Root "connector.json"
 $MaxBody = 131072
 $ExitToken = [guid]::NewGuid().ToString('N') # token efímero para cerrar solo el escritorio local
+$script:LastConnectorProbe = @{port=0;version='';reason='no comprobado'}
 function Get-Mime([string]$Path){
  switch([IO.Path]::GetExtension($Path).ToLowerInvariant()){
  '.html'{'text/html; charset=utf-8'} '.htm'{'text/html; charset=utf-8'}
@@ -68,13 +69,14 @@ function Read-ConnectorSafeDiagnostic {
  $expected=''
  $expectedPath=Join-Path $Root 'capitan-rodolfo\VERSION'
  try {if(Test-Path $expectedPath){$expected=(Get-Content $expectedPath -Raw).Trim()}}catch{}
- $detail=@{expectedVersion=$expected;serviceState='sin estado';serviceVersion='';serviceError='';launcherLog='C:\Sistemas\DoingLioLauncher\launcher.log';bridgeErrorLog='C:\Sistemas\DoingLioConnector\bridge.err.log'}
+ $detail=@{expectedVersion=$expected;serviceState='sin estado';serviceVersion='';serviceError='';servicePort=0;healthVersion=[string]$script:LastConnectorProbe.version;healthPort=[int]$script:LastConnectorProbe.port;probeReason=[string]$script:LastConnectorProbe.reason;launcherLog='C:\Sistemas\DoingLioLauncher\launcher.log';bridgeErrorLog='C:\Sistemas\DoingLioConnector\bridge.err.log'}
  $file='C:\Sistemas\DoingLio\data\capitan\estado.json'
  if(Test-Path $file){
   try {
    $st=Get-Content $file -Raw|ConvertFrom-Json
    $detail.serviceState=[string]$st.state
    $detail.serviceVersion=[string]$st.version
+   $detail.servicePort=[int]$st.port
    if($st.error){
     $message=[string]$st.error
     if($message -match '(?i)password|contrase.a|bearer|token|api.key|secret|sk-'){ $message='Ver estado.json local para diagnóstico protegido' }
@@ -93,28 +95,41 @@ function Test-PortService([int]$Port,[string]$ExpectedVersion) {
  }catch{return $false}
 }
 function Find-ReadyConnector {
- # En caso de conflicto Windows elige un puerto libre; el PID del servicio lo
- # guarda en estado.json. No probar puertos arbitrarios sin verificar /health.
+ # Leer el puerto real del servicio; los puertos alternativos son solo respaldo.
  $d=Read-ConnectorSafeDiagnostic
- if([string]::IsNullOrWhiteSpace($d.expectedVersion)){return $null}
+ $script:LastConnectorProbe=@{port=0;version='';reason='No respondió ningún servicio compatible'}
+ if([string]::IsNullOrWhiteSpace($d.expectedVersion)){
+  $script:LastConnectorProbe.reason='Falta VERSION del especialista instalado'
+  return $null
+ }
  $ports=@()
- $file='C:\Sistemas\DoingLio\data\capitan\estado.json'
- if(Test-Path $file){
+ if([int]$d.servicePort -ge 1024 -and [int]$d.servicePort -le 65535){$ports += [int]$d.servicePort}
+ if(Test-Path $ConnectorState){
   try{
-   $st=Get-Content $file -Raw|ConvertFrom-Json
-   $foundPort=0
-   if([int]::TryParse([string]$st.port,[ref]$foundPort) -and
-      $foundPort -ge 1024 -and $foundPort -le 65535){$ports += $foundPort}
+   $previous=Get-Content $ConnectorState -Raw|ConvertFrom-Json
+   $oldPort=0
+   if([int]::TryParse([string]$previous.port,[ref]$oldPort) -and $oldPort -ge 1024 -and $oldPort -le 65535){$ports += $oldPort}
   }catch{}
  }
- # Dos puertos habituales como respaldo, no esperar siete intentos por request.
- $ports += @(8787,8797)
- foreach($port in @($ports | Select-Object -Unique)){
-  if(Test-PortService -Port ([int]$port) -ExpectedVersion ([string]$d.expectedVersion)){
-   $found=@{ok=$true;port=[int]$port;version=[string]$d.expectedVersion;updatedAt=(Get-Date).ToString('o')}
-   $found | ConvertTo-Json | Set-Content -Path $ConnectorState -Encoding UTF8
-   return $found
-  }
+ $ports += @(8787,8797,18787,27877,37877,48787,57877)
+ foreach($p in @($ports | Select-Object -Unique)){
+  try{
+   $health=Invoke-RestMethod -Uri ("http://127.0.0.1:" + $p + "/health") -TimeoutSec 1
+   if($health.ok -and $health.service -eq 'Capitan Rodolfo Local'){
+    if([string]$health.version -ne [string]$d.expectedVersion){
+     $script:LastConnectorProbe=@{port=[int]$p;version=[string]$health.version;reason='Hay un conector de otra versión'}
+     continue
+    }
+    if($health.apiSqlObject -ne $true){
+     $script:LastConnectorProbe=@{port=[int]$p;version=[string]$health.version;reason='Falta la API SQL requerida'}
+     continue
+    }
+    $ready=@{ok=$true;port=[int]$p;version=[string]$health.version;updatedAt=(Get-Date).ToString('o')}
+    try{$ready | ConvertTo-Json | Set-Content -Path $ConnectorState -Encoding UTF8}catch{}
+    $script:LastConnectorProbe=@{port=[int]$p;version=[string]$health.version;reason='Conector compatible'}
+    return $ready
+   }
+  }catch{}
  }
  return $null
 }
@@ -132,7 +147,13 @@ function Proxy-Sql($Stream,$Request){
  }
  if(-not $state -or -not $state.ok -or -not $state.port){
   $diag=Read-ConnectorSafeDiagnostic
-  Send-Json $Stream 503 @{ok=$false;error='El conector SQL no esta activo. Revisá el diagnóstico local; se reintenta descubrir el servicio automáticamente.';diagnostic=$diag};return
+  $message='DoingLio no encuentra el conector SQL local. SQL Server puede estar activo; revisá el estado del puente local.'
+  if($diag.healthVersion -and $diag.expectedVersion -and $diag.healthVersion -ne $diag.expectedVersion){
+    $message='Hay un conector de versión '+$diag.healthVersion+' en el puerto '+$diag.healthPort+', pero el especialista necesita la versión '+$diag.expectedVersion+'. Reabrí DoingLio desde el acceso del escritorio para sincronizarlos.'
+  } elseif($diag.serviceError){
+    $message='El conector informó un problema. Consultá el diagnóstico local y bridge.err.log; las credenciales guardadas permanecen intactas.'
+  }
+  Send-Json $Stream 503 @{ok=$false;error=$message;diagnostic=$diag};return
  }
  $sqlPort=[int]$state.port
  if($sqlPort -lt 1024 -or $sqlPort -gt 65535){
