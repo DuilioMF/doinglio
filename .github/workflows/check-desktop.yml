@@ -27,5 +27,8 @@ jobs:
               throw "Error de sintaxis PowerShell: $file"
             }
           }
+      - name: Exercise local HTTP server and guarded close
+        shell: powershell
+        run: ./tests/desktop-http-smoke.ps1
       - name: Verify shared UI and splash
         run: node tests/desktop-contract.test.js
