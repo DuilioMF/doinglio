@@ -11,8 +11,12 @@ const inline = splash.match(/<script type="text\/javascript">([\s\S]*?)<\/script
 assert(inline, 'Splash has JS code');
 new vm.Script(inline[1], {filename:'reloj_inicio.hta inline JS'});
 assert(splash.includes('id="startup-build"'), 'Startup version is present');
+assert(splash.includes('left:78px;top:19px'), 'Startup build badge is next to X and not hidden at screen edge');
+const home = read('index.html');
+assert(home.includes('<div class="code" id="build-code"'), 'Visible main build is under brand, not behind right controls');
+assert(home.indexOf('id="build-code"') < home.indexOf('</header>'), 'Build badge is inside header');
 assert(splash.includes('onclick="cancelStartup()"'), 'Startup X cancels launch');
-assert(read('BUILD').trim() === '28', 'Expected DoingLio build D28');
+assert(read('BUILD').trim() === '29', 'Expected DoingLio build D29');
 const server = read('launcher/doinglio_web_server.ps1');
 assert(server.includes('doinglio-window.js'), 'Server injects shared X into all local HTML');
 assert(server.includes("'/ _doinglio_exit'".replace(' ', '')), 'Local exit endpoint exists');

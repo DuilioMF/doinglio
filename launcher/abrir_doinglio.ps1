@@ -24,6 +24,16 @@ try {
  } finally {
    Remove-Item $Temp -Force -ErrorAction SilentlyContinue
  }
+ # Leer el build publicado y enviarlo al reloj mientras permanece visible.
+ # El splash antiguo ya consulta last_build.txt periódicamente.
+ try {
+   $b=Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/DuilioMF/doinglio/main/BUILD' -TimeoutSec 10
+   $number=([string]$b).Trim()
+   if($number -match '^\d+$'){
+     [IO.File]::WriteAllText((Join-Path $Root 'last_build.txt'),$number)
+     Log ('Versión del reloj actualizada desde GitHub: D'+$number)
+   }
+ }catch{Log ('Lectura anticipada BUILD no disponible: '+$_.Exception.Message)}
  & $Launcher *>> $Log
  if($LASTEXITCODE -and $LASTEXITCODE -ne 0){throw "Lanzador devolvio codigo $LASTEXITCODE"}
  $PortPath=Join-Path $Root "web.port"
