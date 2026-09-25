@@ -3,6 +3,7 @@ on:
   workflow_dispatch:
   push:
     paths:
+      - "BUILD"
       - "DOINGLIO.bat"
       - "INSTALAR_DOINGLIO.bat"
       - "launcher/**"
@@ -13,6 +14,27 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Validar inicio sin barra ni ventana DOS
+        shell: powershell
+        run: |
+          $launcher=Get-Content "launcher/doinglio_launcher.ps1" -Raw
+          $splash=Get-Content "launcher/reloj_inicio.hta" -Raw
+          $bat=Get-Content "DOINGLIO.bat" -Raw
+          $vbs=Get-Content "launcher/DoingLioInicio.vbs" -Raw
+          foreach($flag in @('--app=','--start-fullscreen','--user-data-dir','msedge.exe','chrome.exe')){
+            if(!$launcher.Contains($flag)){throw "Falta modo sin barra: $flag"}
+          }
+          if($launcher.Contains('Start-Process ("http://127.0.0.1:"+$webPort+"/?desktop=1")')){
+            throw 'El lanzador sigue abriendo el navegador normal'
+          }
+          if($splash -notmatch 'BORDER="none"' -or $splash -notmatch 'CAPTION="no"' -or $splash -notmatch 'WINDOWSTATE="maximize"'){
+            throw 'Reloj inicial no es pantalla completa sin marco'
+          }
+          if($vbs -notmatch 'app.Exec\("mshta.exe' -or $vbs -notmatch 'app.Run\(cmd, 0, True\)'){
+            throw 'El acceso directo ya no abre el reloj sin DOS'
+          }
+          if($bat -notmatch 'WindowStyle Hidden'){throw 'El acceso alternativo abre consola visible'}
+          Write-Host "Inicio D27: reloj sin marco + navegador modo app fullscreen, pruebas estructurales OK"
       - name: Instalar acceso con cerebro
         shell: powershell
         run: |
