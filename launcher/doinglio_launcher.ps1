@@ -15,6 +15,7 @@ $WebPortFile = Join-Path $Root "web.port"
 $Log = Join-Path $Root "launcher.log"
 $CancelFlag = Join-Path $Root "cancel.flag"
 $CachedBuild = Join-Path $Root "last_build.txt"
+$CachedConnector = Join-Path $Root "last_connector.txt"
 $ThemeFile = Join-Path $Root "theme.txt"
 $CI = ($env:DOINGLIO_CI -eq "1")
 
@@ -177,6 +178,8 @@ try {
   # El codigo descargado y el bridge residente deben quedar en la MISMA version.
   # Antes de reemplazar el archivo, retirar solo instancias de nuestro conector viejo.
   $NewConnectorVersion = (Get-Content (Join-Path $BuildRuntime "capitan-rodolfo\VERSION") -Raw).Trim()
+  # Mostrar al reloj la versión descargada (no la de un proceso viejo).
+  [IO.File]::WriteAllText($CachedConnector,$NewConnectorVersion)
   if(-not $CI){
     $oldRunning = $false
     foreach($port in @(Get-ConnectorCandidatePorts)){
