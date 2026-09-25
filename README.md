@@ -48,3 +48,11 @@ Cada cambio debe quedar en un commit recuperable antes de publicar. Conservar ro
 ## Publicación vigente — 22/09/2026
 
 GitHub es la fuente de código y GitHub Pages publica `main`. No usar copias de Sites como origen ni destino de navegación. Cada cambio se integra por PR y conserva su commit para rollback. Tema claro/oscuro compartido entre páginas; control arriba y regreso debajo.
+
+## Cierre y build del escritorio (D28)
+
+- El reloj de apertura muestra D·NN usando el último BUILD descargado; el lanzador actualiza el archivo `C:\Sistemas\DoingLioLauncher\last_build.txt` al instalar la nueva copia.
+- La X superior izquierda del reloj cancela la apertura; el lanzador respeta `cancel.flag` antes de iniciar SQL o abrir el navegador.
+- El servidor local inyecta automáticamente `doinglio-window.js` en **todas** las páginas HTML: Cuaderno Maestro, Capitán Rodolfo, Ruben y futuros especialistas. Comparten una X a la izquierda.
+- Al pulsar X, solo se cierra la ventana del perfil exclusivo de DoingLio y termina el servidor web de esa sesión; el conector SQL residente y los navegadores personales no se detienen.
+- Cada especialista sigue teniendo su versión independiente. Los sitios públicos abiertos como pestañas normales no pueden ni deben cerrar el navegador del usuario.
