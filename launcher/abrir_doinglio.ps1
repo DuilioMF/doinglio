@@ -24,6 +24,30 @@ try {
  } finally {
    Remove-Item $Temp -Force -ErrorAction SilentlyContinue
  }
+ # Actualizar la etiqueta del reloj mientras éste sigue abierto: incluso en la
+ # primera apertura tras un despliegue, el reloj anterior lee last_build.txt.
+ try {
+   $b=Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/DuilioMF/doinglio/main/BUILD' -TimeoutSec 10
+   $number=([string]$b).Trim()
+   if($number -match '^\\d+
+ if($LASTEXITCODE -and $LASTEXITCODE -ne 0){throw "Lanzador devolvio codigo $LASTEXITCODE"}
+ $PortPath=Join-Path $Root "web.port"
+ if(-not (Test-Path $PortPath)){throw "No se genero web.port (ver launcher.log)"}
+ $Port=(Get-Content $PortPath -Raw).Trim()
+ if($Port -notmatch '^[0-9]{4,5}$'){throw "Puerto web invalido: $Port"}
+ $Health=Invoke-RestMethod -Uri ("http://127.0.0.1:"+$Port+"/_doinglio_health") -TimeoutSec 4
+ if(-not $Health.ok){throw "La web local no respondio correctamente"}
+ Log ("Web de escritorio verificada en puerto "+$Port)
+ exit 0
+} catch {
+ Log ("ERROR: "+$_.Exception.Message)
+ exit 1
+}
+){
+     [IO.File]::WriteAllText((Join-Path $Root 'last_build.txt'),$number)
+     Log ('Build del reloj actualizado desde GitHub: D'+$number)
+   }
+ }catch{Log ('No se pudo anticipar build del reloj: '+$_.Exception.Message)}
  & $Launcher *>> $Log
  if($LASTEXITCODE -and $LASTEXITCODE -ne 0){throw "Lanzador devolvio codigo $LASTEXITCODE"}
  $PortPath=Join-Path $Root "web.port"
