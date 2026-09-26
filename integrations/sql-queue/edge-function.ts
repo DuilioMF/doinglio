@@ -71,7 +71,7 @@ Deno.serve(async (req: Request) => {
       for(const job of (data||[])){
         const station=Number(job.result_metadata?.idEstacion);
         if (!Number.isSafeInteger(station) || !(await permitted(job.phone_e164,station))) {
-          await db.from("doinglio_sql_question_queue").update({status:"failed",completed_at:new Date().toISOString(),reply_text:"Acceso no autorizado o estación no permitida."}).eq("id",job.id).eq("status","processing");
+          await db.from("doinglio_sql_question_queue").update({status:"failed",completed_at:new Date().toISOString(),reply_text:"Acceso no autorizado o estación no permitida."}).eq("id",job.id).eq("status","claimed");
           continue;
         }
         return json({ok:true,job:{id:job.id,intent:job.intent,idEstacion:station}});
@@ -90,9 +90,9 @@ Deno.serve(async (req: Request) => {
         if(k in metadata && (typeof metadata[k]==="string" || typeof metadata[k]==="number")) sanitized[k]=metadata[k];
       }
       const {data,error}=await db.from("doinglio_sql_question_queue")
-        .update({status:ok?"completed":"failed",reply_text:reply,completed_at:new Date().toISOString(),
+        .update({status:ok?"answered":"failed",reply_text:reply,completed_at:new Date().toISOString(),
           result_metadata:sanitized})
-        .eq("id",body.id).eq("status","processing").select("id").maybeSingle();
+        .eq("id",body.id).eq("status","claimed").select("id").maybeSingle();
       if(error) throw new Error("COMPLETE_FAILED");
       if(!data) return fail("JOB_NOT_CLAIMED",409);
       return json({ok:true,id:data.id});
