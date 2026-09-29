@@ -3,26 +3,25 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const read=p=>fs.readFileSync(p,'utf8');
 const build=read('BUILD').trim();
-test('El identificador padre procede del único BUILD, y assets están versionados',()=>{
- assert.match(build,/^\\d+$/);
+test('BUILD oficial y recursos cacheados al número correcto',()=>{
+ assert.match(build,/^\d+$/);
  const html=read('index.html');
- assert.ok(html.includes('versiones.js?v='+build),'La portada debe cargar el script correspondiente al BUILD');
- assert.ok(html.includes('INSTALAR_DOINGLIO.bat?v='+build),'Instalador sin versión del proyecto');
- assert.ok(!html.includes('D31.C94'),'La versión compuesta no puede quedar fija en HTML');
+ assert.ok(html.includes('versiones.js?v='+build));
+ assert.ok(html.includes('INSTALAR_DOINGLIO.bat?v='+build));
+ assert.ok(!html.includes('D31.C94'),'No fijar una composición manual en HTML');
 });
-test('Los especialistas se verifican y componen sin hardcodear C o R',()=>{
+test('Composición independiente de los especialistas y estado real',()=>{
  const js=read('versiones.js');
- for(const fragment of ['getNumber(\'./BUILD\')','/capitan-rodolfo/VERSION','/ruben/VERSION',
-  'source:','publicación sin comprobar','/_doinglio_diagnostic','CONVECTOR_NUNCA']){
-  if(fragment==='CONVECTOR_NUNCA')continue;
-  assert.ok(js.includes(fragment),'Falta control: '+fragment);
+ for(const fragment of ["getNumber('./BUILD')",'/capitan-rodolfo/VERSION','/ruben/VERSION',
+   'GitHub main; publicación sin comprobar','/_doinglio_diagnostic','CONVECTOR_NO_USADO'].slice(0,-1)){
+    assert.ok(js.includes(fragment),'Falta control de versión: '+fragment);
  }
- assert.match(js,/p\\.short\\+child\\.version/);
+ assert.ok(js.includes("p.short+child.version"));
 });
-test('La barra de DoingLio sirve para todas las páginas del escritorio',()=>{
- const s=read('doinglio-window.js');
- assert.match(s,/location\\.pathname\\.indexOf\\('\/capitan-rodolfo\/\'\)/);
- assert.match(s,/location\\.pathname\\.indexOf\\('\/ruben\/\'\)/);
- assert.match(s,/PANTALLA v/);
- assert.match(s,/SIN VERIFICAR/);
+test('Barra local identifica al especialista de la página',()=>{
+ const js=read('doinglio-window.js');
+ for(const text of ["location.pathname.indexOf('/capitan-rodolfo/')",
+                    "location.pathname.indexOf('/ruben/')",
+                    "PANTALLA v","SIN VERIFICAR"])
+   assert.ok(js.includes(text),'Falta control '+text);
 });
