@@ -1,18 +1,61 @@
 name: Sync project version
 
+# Sincronizar solo DESPUÉS de publicar y comprobar BUILD público, nunca al mero push.
 on:
-  push:
+  workflow_run:
+    workflows: ["Deploy DoingLio"]
+    types: [completed]
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: read
+  actions: read
+
 jobs:
   notify-version-sync:
+    if: >-
+      ${{ github.event_name == 'workflow_dispatch' ||
+          (github.event.workflow_run.conclusion == 'success' &&
+           github.event.workflow_run.head_branch == 'main') }}
     runs-on: ubuntu-latest
     steps:
-      - name: Notify Memoria Duilio
+      - name: Determinar SHA real del despliegue y verificar que siga siendo main
+        id: release
+        shell: bash
+        env:
+          RELEASE_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+          GH_TOKEN: ${{ github.token }}
         run: |
-          curl --fail --show-error --silent --retry 3 \
-            -X POST \
-            -H 'Content-Type: application/json' \
-            -d '{"repository":"DuilioMF/doinglio","sha":"${{ github.sha }}","ref":"${{ github.ref }}"}' \
+          set -euo pipefail
+          current="$(curl -fsSL --header "Authorization: Bearer $GH_TOKEN" --header 'Accept: application/vnd.github+json' "https://api.github.com/repos/DuilioMF/doinglio/commits/main" | python3 -c 'import json,sys;print(json.load(sys.stdin)["sha"])')"
+          if [[ "$current" != "$RELEASE_SHA" ]]; then
+            echo "::error::La publicación no corresponde al main actual; no se sincroniza."
+            exit 1
+          fi
+          expected="$(curl -fsSL "https://raw.githubusercontent.com/DuilioMF/doinglio/$RELEASE_SHA/BUILD" | tr -d '\r\n ')"
+          [[ "$expected" =~ ^[0-9]+$ ]] || { echo "::error::BUILD inválido"; exit 1; }
+          echo "sha=$RELEASE_SHA" >> "$GITHUB_OUTPUT"
+          echo "version=D$expected" >> "$GITHUB_OUTPUT"
+          echo "number=$expected" >> "$GITHUB_OUTPUT"
+      - name: Comprobar otra vez la versión web servida
+        shell: bash
+        env:
+          EXPECTED: ${{ steps.release.outputs.number }}
+          RELEASE_SHA: ${{ steps.release.outputs.sha }}
+        run: |
+          set -euo pipefail
+          published="$(curl -fsSL --max-time 20 --header 'Cache-Control: no-cache' "https://doinglio.revalsoftia.com.ar/BUILD?sha=$RELEASE_SHA" | tr -d '\r\n ')"
+          [[ "$published" == "$EXPECTED" ]] || { echo "::error::Publicado=$published; esperado=$EXPECTED"; exit 1; }
+      - name: Notificar n8n solo con evidencia de publicación
+        shell: bash
+        env:
+          RELEASE_SHA: ${{ steps.release.outputs.sha }}
+          RELEASE_VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          set -euo pipefail
+          python3 -c 'import json,os;print(json.dumps({"repository":"DuilioMF/doinglio","sha":os.environ["RELEASE_SHA"],"ref":"refs/heads/main","version":os.environ["RELEASE_VERSION"],"publication_verified":True}))' > /tmp/release.json
+          curl --fail --show-error --silent --retry 3 --retry-all-errors \
+            -X POST -H 'Content-Type: application/json' \
+            --data-binary @/tmp/release.json \
             'https://n8n.srv1251563.hstgr.cloud/webhook/memoria-version-sync-github-v1'
