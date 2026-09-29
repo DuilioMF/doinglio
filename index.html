@@ -62,6 +62,7 @@
 <link rel="stylesheet" href="theme.css">
 <script src="theme.js" defer></script>
 <script src="doinglio-window.js" defer></script>
+<script src="versiones.js?v=32" defer></script>
 </head>
 <body>
   <div class="doomsday-bg" aria-hidden="true">
@@ -126,7 +127,7 @@
     </section>
 
     <section class="local-install" id="local-install">
-      <a href="INSTALAR_DOINGLIO.bat?v=22" download="INSTALAR_DOINGLIO.bat">
+      <a href="INSTALAR_DOINGLIO.bat?v=32" download="INSTALAR_DOINGLIO.bat">
         🧠 INSTALAR DOINGLIO EN EL ESCRITORIO
         <small>icono de cerebro · actualización automática</small>
       </a>
@@ -176,63 +177,7 @@
   </main>
 
   <footer><span>REVALSOFT IA</span><i></i><span>DOINGLIO · CUADERNO MAESTRO</span></footer>
-  <script>
-    (async function(){
-      try{
-        const r = await fetch('./BUILD?ts=' + Date.now(), {cache:'no-store'});
-        if(!r.ok) throw new Error('BUILD ' + r.status);
-        const n = (await r.text()).trim();
-        document.getElementById('build-code').textContent = 'D·' + n;
-      }catch(e){
-        document.getElementById('build-code').textContent = 'D·?';
-        console.warn('No se pudo leer BUILD', e);
-      }
-    })();
 
-    (function(){
-      const local = location.hostname === '127.0.0.1' || location.hostname === 'localhost';
-      const installer=document.getElementById('local-install');
-      if(local && installer) installer.style.display='none';
-      if(!local) return;
-      const capitan=document.getElementById('open-capitan');
-      const ruben=document.getElementById('open-ruben');
-      async function readText(url,fallback){
-        try{
-          const r=await fetch(url+'?ts='+Date.now(),{cache:'no-store'});
-          if(r.ok) return (await r.text()).trim();
-        }catch(_){}
-        return fallback;
-      }
-      async function readSqlState(){
-        try{
-          const r=await fetch('/_doinglio_sql/api/state',{cache:'no-store'});
-          if(r.ok)return await r.json();
-        }catch(e){console.warn('SQL local:',e.message)}
-        return {connected:false};
-      }
-      if(capitan){
-        capitan.href='./capitan-rodolfo/index.html';
-        Promise.all([readText('./capitan-rodolfo/VERSION','?'),readSqlState()]).then(([v,state])=>{
-          const meta=document.getElementById('capitan-meta');
-          if(!meta) return;
-          if(state.connected && state.database){
-            meta.innerHTML='<span class="dot"></span>LOCAL · v'+v+' · SQL CONECTADO · '+state.database;
-          }else if(state.connected){
-            meta.innerHTML='<span class="dot"></span>LOCAL · v'+v+' · SQL CONECTADO · ELEGIR BASE';
-          }else{
-            meta.innerHTML='<span class="dot" style="background:#ffb36b;box-shadow:0 0 13px #ffb36b"></span>LOCAL · v'+v+' · SQL SIN CONEXIÓN';
-          }
-        });
-      }
-      if(ruben){
-        ruben.href='./ruben/index.html';
-        readText('./ruben/VERSION','?').then(v=>{
-          const meta=document.getElementById('ruben-meta');
-          if(meta) meta.innerHTML='<span class="dot"></span>LOCAL · v'+v;
-        });
-      }
-    })();
-  </script>
 
 </body>
 </html>

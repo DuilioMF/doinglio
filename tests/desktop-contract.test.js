@@ -19,7 +19,7 @@ assert(home.includes('<div class="code" id="build-code"'), 'Visible main build i
 assert(home.includes('rel="icon" type="image/svg+xml" href="brain-davinci.svg"'), 'DoingLio app favicon uses brain');
 assert(home.indexOf('id="build-code"') < home.indexOf('</header>'), 'Build badge is inside header');
 assert(splash.includes('onclick="cancelStartup()"'), 'Startup X cancels launch');
-assert(read('BUILD').trim() === '31', 'Expected DoingLio build D31');
+assert.match(read('BUILD').trim(), /^\d+$/, 'BUILD canónico debe ser numérico');
 const server = read('launcher/doinglio_web_server.ps1');
 assert(server.includes('doinglio-window.js'), 'Server injects shared X into all local HTML');
 assert(server.includes('href="/brain-davinci.svg"'), 'All local specialist windows use brain favicon');
@@ -73,4 +73,4 @@ const ruben = fakeWindow('http://127.0.0.1:8790/ruben/index.html',session,'test-
 assert.equal(ruben.elements.length,1,'Ruben inherits window toolbar');
 const publicSite = fakeWindow('https://duiliomf.github.io/doinglio/',new Map(),undefined);
 assert.equal(publicSite.elements.length,0,'Public browser tab has no nonfunctional close control');
-console.log('OK: Desktop D28 startup build, cancel button, script syntax, shared aligned toolbar with maximize, specialist inheritance and isolated exit.');
+console.log('OK: Desktop build dinámico, cancel button, script syntax, shared aligned toolbar with maximize, specialist inheritance and isolated exit.');

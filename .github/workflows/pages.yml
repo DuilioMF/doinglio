@@ -27,6 +27,8 @@ jobs:
         uses: actions/configure-pages@v5
         with:
           enablement: true
+      - name: Validar versiones compuestas y pantallas
+        run: node --test tests/versiones-compuestas.test.js
       - name: Upload site
         uses: actions/upload-pages-artifact@v3
         with:

@@ -101,7 +101,39 @@ function mount() {
   bar.appendChild(maximize);
   // Mantener el identificador original: el código que obtiene BUILD sigue actualizándolo.
   var version = document.getElementById('build-code');
-  if (version) bar.appendChild(version);
+  if (version) {
+    bar.appendChild(version);
+  } else {
+    // El escritorio muestra la composición real del especialista que está abierto.
+    var part = location.pathname.indexOf('/capitan-rodolfo/')===0 ? {code:'C',folder:'capitan-rodolfo'} :
+      location.pathname.indexOf('/ruben/')===0 ? {code:'R',folder:'ruben'} : null;
+    if (part) {
+      version = document.createElement('span');
+      version.id = 'build-code';
+      version.textContent = 'D?.'+part.code+'? · verificando';
+      bar.appendChild(version);
+      function num(path) {
+        return fetch(path+'?ts='+Date.now(),{cache:'no-store'}).then(function(response){
+          if(!response.ok)throw new Error('Versión sin respuesta');
+          return response.text();
+        }).then(function(s){
+          s=s.trim();
+          if(!/^\d+$/.test(s))throw new Error('Versión inválida');
+          return Number(s);
+        });
+      }
+      Promise.all([num('/BUILD'),num('/'+part.folder+'/VERSION')]).then(function(values){
+        var label='D'+values[0]+'.'+part.code+values[1];
+        if(part.code==='C') {
+          var actual=document.body.dataset.capitanBuild;
+          if(actual && Number(actual)!==values[1]) {
+            label+=' · PANTALLA v'+actual+' DESFASADA';
+          }
+        }
+        version.textContent=label;
+      }).catch(function(){ version.textContent='D?.'+part.code+'? · SIN VERIFICAR'; });
+    }
+  }
   document.body.appendChild(bar);
   updateMaximize();
 }
