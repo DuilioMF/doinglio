@@ -38,11 +38,15 @@ try {
   if(-not $tokenMatch.Success){throw 'No se obtuvo token de la sesión'}
   $response=Invoke-RestMethod -Uri "$base/_doinglio_exit" -Method POST -Headers @{'Origin'=$base;'X-DoingLio-Exit'=$tokenMatch.Groups[1].Value} -TimeoutSec 3
   if(-not $response.ok){throw 'Cierre válido rechazado'}
-  Start-Sleep -Milliseconds 1000
-  if(-not $server.HasExited){
+  # El cierre solicita apagar solo la ventana exclusiva. CIM puede tardar en CI Windows.
+  # Comprobar salida eventual con un plazo acotado, sin relajar la validación del token.
+  $exited=$false
+  for($attempt=0;$attempt -lt 40;$attempt++){
+    Start-Sleep -Milliseconds 250
     $server.Refresh()
-    if(-not $server.HasExited){throw 'Servidor no terminó tras cierre válido'}
+    if($server.HasExited){$exited=$true;break}
   }
+  if(-not $exited){throw 'Servidor no terminó tras cierre válido en 10 segundos'}
   Write-Host 'OK: servidor local, X compartida en todas las páginas y cierre con token.'
 }finally{
   if(-not $server.HasExited){Stop-Process -Id $server.Id -Force -ErrorAction SilentlyContinue}
