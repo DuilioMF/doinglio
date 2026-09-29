@@ -118,7 +118,7 @@ function mount() {
           return response.text();
         }).then(function(s){
           s=s.trim();
-          if(!/^\\d+$/.test(s))throw new Error('Versión inválida');
+          if(!/^\d+$/.test(s))throw new Error('Versión inválida');
           return Number(s);
         });
       }
