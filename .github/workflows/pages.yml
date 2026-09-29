@@ -15,7 +15,39 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  version-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: node --test tests/versiones-compuestas.test.js
+
+  desktop-check:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Verificar sintaxis PowerShell
+        shell: powershell
+        run: |
+          $files = @('launcher/doinglio_launcher.ps1', 'launcher/doinglio_web_server.ps1', 'launcher/abrir_doinglio.ps1', 'launcher/instalar_acceso.ps1')
+          foreach ($file in $files) {
+            $tokens = $null; $errors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path $file).Path, [ref]$tokens, [ref]$errors) | Out-Null
+            if ($errors.Count) { throw "Error de sintaxis PowerShell: $file" }
+          }
+      - name: Probar servidor HTTP local y cierre
+        shell: powershell
+        run: ./tests/desktop-http-smoke.ps1
+      - name: Verificar contrato de escritorio
+        run: node tests/desktop-contract.test.js
+
   deploy:
+    needs: [version-check, desktop-check]
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -37,3 +69,26 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v4
 
+
+      - name: Verificar BUILD público después de publicar
+        shell: bash
+        env:
+          PUBLIC_BUILD_URL: https://doinglio.revalsoftia.com.ar/BUILD
+        run: |
+          set -euo pipefail
+          expected="$(tr -d '\r\n ' < BUILD)"
+          test "$expected" != ""
+          matched=0
+          for attempt in {1..12}; do
+            observed="$(curl --location --silent --show-error --fail --max-time 12 --header 'Cache-Control: no-cache' "$PUBLIC_BUILD_URL?sha=${GITHUB_SHA}&attempt=$attempt" 2>/dev/null | tr -d '\r\n ' || true)"
+            if [[ "$observed" == "$expected" ]]; then
+              matched=1
+              break
+            fi
+            sleep 5
+          done
+          if [[ "$matched" != 1 ]]; then
+            echo "::error::BUILD público no coincide con GitHub ($expected)"
+            exit 1
+          fi
+          echo "BUILD público D$expected verificado para commit $GITHUB_SHA"
