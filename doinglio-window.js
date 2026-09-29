@@ -1,6 +1,6 @@
 (function () {
 'use strict';
-// Regla común: toda ventana del escritorio local tiene X de cierre.
+// En escritorio local, una barra compacta agrupa cerrar, maximizar y versión.
 var local = location.hostname === '127.0.0.1' || location.hostname === 'localhost';
 if (!local) return;
 var desktop = new URLSearchParams(location.search).has('desktop');
@@ -10,35 +10,80 @@ try {
 } catch (_) {}
 if (!desktop) return;
 function mount() {
-  if (!document.body || document.getElementById('doinglio-window-close')) return;
+  if (!document.body || document.getElementById('doinglio-window-toolbar')) return;
   document.body.classList.add('doinglio-desktop-mode');
   var style = document.createElement('style');
   style.textContent =
-    '#doinglio-window-close{position:fixed!important;left:12px!important;top:12px!important;' +
-    'z-index:2147483646!important;width:44px!important;height:44px!important;' +
-    'display:grid!important;place-items:center!important;border-radius:12px!important;' +
-    'border:1px solid #c58b4b!important;background:#20160fe8!important;color:#ffdbac!important;' +
-    'font:400 28px/1 Segoe UI,Arial,sans-serif!important;cursor:pointer!important;' +
+    '#doinglio-window-toolbar{position:fixed!important;top:12px!important;left:14px!important;' +
+    'display:flex!important;align-items:center!important;gap:10px!important;z-index:2147483646!important;' +
+    'height:46px!important;max-width:calc(100vw - 28px)!important;box-sizing:border-box!important}' +
+    '#doinglio-window-toolbar button{position:static!important;display:grid!important;place-items:center!important;' +
+    'flex:0 0 46px!important;width:46px!important;height:46px!important;margin:0!important;padding:0!important;' +
+    'border-radius:12px!important;border:1px solid #c58b4b!important;background:#20160fe8!important;' +
+    'color:#ffdbac!important;font:400 26px/1 Segoe UI,Arial,sans-serif!important;cursor:pointer!important;' +
     'box-shadow:0 4px 20px #0008!important;opacity:1!important}' +
-    '#doinglio-window-close:hover{background:#934a26!important;color:#fff!important}' +
-    '#doinglio-window-close:focus-visible{outline:3px solid #ffbe72;outline-offset:3px}' +
-    'body.doinglio-desktop-mode>header.top{padding-left:max(76px,6vw)!important}' +
-    'body.doinglio-desktop-mode .wrap>header:first-child{padding-left:64px!important}' +
-    'html[data-theme="light"] #doinglio-window-close{background:#fff7e9!important;color:#563a19!important}';
+    '#doinglio-window-toolbar button:hover{background:#934a26!important;color:#fff!important}' +
+    '#doinglio-window-toolbar button:focus-visible{outline:3px solid #ffbe72;outline-offset:3px}' +
+    '#doinglio-window-toolbar #build-code{display:inline-flex!important;position:static!important;align-items:center!important;' +
+    'margin:0!important;min-width:92px!important;height:46px!important;box-sizing:border-box!important;' +
+    'padding:6px 13px!important;white-space:nowrap!important;letter-spacing:.12em!important}' +
+    '#doinglio-window-toolbar #build-code:before{display:none!important}' +
+    'body.doinglio-desktop-mode>header.top{padding-top:76px!important;min-height:136px!important}' +
+    'body.doinglio-desktop-mode .wrap>header:first-child{padding-top:76px!important}' +
+    'html[data-theme="light"] #doinglio-window-toolbar button{background:#fff7e9!important;color:#563a19!important}' +
+    '@media(max-width:540px){body.doinglio-desktop-mode>header.top{padding-top:75px!important}}';
   document.head.appendChild(style);
-  var btn = document.createElement('button');
-  btn.id = 'doinglio-window-close';
-  btn.type = 'button';
-  btn.textContent = '\u00d7';
-  btn.title = 'Cerrar DoingLio';
-  btn.setAttribute('aria-label', 'Cerrar DoingLio');
-  btn.addEventListener('click', function () {
-    if (btn.disabled) return;
-    btn.disabled = true;
+
+  var bar = document.createElement('div');
+  bar.id = 'doinglio-window-toolbar';
+  bar.setAttribute('role', 'group');
+  bar.setAttribute('aria-label', 'Controles de la ventana');
+
+  var close = document.createElement('button');
+  close.id = 'doinglio-window-close';
+  close.type = 'button';
+  close.textContent = '\u00d7';
+  close.title = 'Cerrar DoingLio';
+  close.setAttribute('aria-label', 'Cerrar DoingLio');
+
+  var maximize = document.createElement('button');
+  maximize.id = 'doinglio-window-maximize';
+  maximize.type = 'button';
+  maximize.textContent = '\u25a1';
+  maximize.title = 'Maximizar';
+  maximize.setAttribute('aria-label', 'Maximizar');
+
+  function updateMaximize() {
+    var full = !!document.fullscreenElement;
+    maximize.textContent = full ? '\u2750' : '\u25a1';
+    maximize.title = full ? 'Restaurar tamaño' : 'Maximizar';
+    maximize.setAttribute('aria-label', maximize.title);
+    maximize.setAttribute('aria-pressed', String(full));
+  }
+  maximize.addEventListener('click', function () {
+    try {
+      if (document.fullscreenElement) {
+        if (document.exitFullscreen) {
+          var exit = document.exitFullscreen();
+          if (exit && exit.catch) exit.catch(function () { alert('Presioná Esc para restaurar.'); });
+        }
+      } else if (document.documentElement.requestFullscreen) {
+        var enter = document.documentElement.requestFullscreen();
+        if (enter && enter.catch) enter.catch(function () { alert('Maximizá la ventana desde Windows.'); });
+      } else {
+        alert('Maximizá la ventana desde Windows.');
+      }
+    } catch (_) { alert('Maximizá la ventana desde Windows.'); }
+  });
+  document.addEventListener('fullscreenchange', updateMaximize);
+
+  close.addEventListener('click', function () {
+    if (close.disabled) return;
+    close.disabled = true;
     function fallback() {
       try { window.close(); } catch (_) {}
       window.setTimeout(function () {
-        btn.disabled = false;
+        close.disabled = false;
         alert('Si la ventana no se cerró, usá Alt+F4.');
       }, 700);
     }
@@ -51,7 +96,14 @@ function mount() {
       window.setTimeout(function () { try { window.close(); } catch (_) {} }, 1100);
     }).catch(fallback);
   });
-  document.body.appendChild(btn);
+
+  bar.appendChild(close);
+  bar.appendChild(maximize);
+  // Mantener el identificador original: el código que obtiene BUILD sigue actualizándolo.
+  var version = document.getElementById('build-code');
+  if (version) bar.appendChild(version);
+  document.body.appendChild(bar);
+  updateMaximize();
 }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mount, {once:true});
 else mount();
