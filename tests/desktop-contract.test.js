@@ -38,11 +38,13 @@ assert(read('launcher/DoingLioInicio.vbs').includes('fs.DeleteFile cancelPath'),
 function fakeWindow(url, session, token) {
   const elements = [];
   const css = [];
+  const ids = new Map();
   const body = {classList:{add(){}}, appendChild(node){elements.push(node);}};
   const doc = {
     readyState:'complete', body, head:{appendChild(node){css.push(node);}},
-    getElementById(id){return elements.find(n=>n.id === id);},
-    createElement(tag){return {tag, setAttribute(k,v){this[k]=v;},
+    getElementById(id){return ids.get(id) || (id === 'build-code' ? {id:'build-code',textContent:'D·31'} : null);},
+    addEventListener(){},
+    createElement(tag){return {tag,children:[],appendChild(node){this.children.push(node);if(node.id) ids.set(node.id,node);},setAttribute(k,v){this[k]=v;},
                            addEventListener(k,fn){this[k]=fn;}};}
   };
   const context = {
@@ -59,13 +61,16 @@ function fakeWindow(url, session, token) {
 }
 const session = new Map();
 const main = fakeWindow('http://127.0.0.1:8790/?desktop=1',session,'test-secret');
-assert.equal(main.elements.length,1,'Cuaderno Maestro has one X');
-assert.equal(main.elements[0].textContent,'×','X appears');
+assert.equal(main.elements.length,1,'Cuaderno Maestro has one window toolbar');
+assert.equal(main.elements[0].id,'doinglio-window-toolbar','Window toolbar exists');
+assert.equal(main.elements[0].children[0].textContent,'×','X appears');
+assert.equal(main.elements[0].children[1].id,'doinglio-window-maximize','Maximize button appears');
+assert.equal(main.elements[0].children[2].id,'build-code','Build badge is aligned in toolbar');
 assert.equal(session.get('doinglio.desktop'),'1');
 const child = fakeWindow('http://127.0.0.1:8790/capitan-rodolfo/index.html',session,'test-secret');
-assert.equal(child.elements.length,1,'Capitán inherits X');
+assert.equal(child.elements.length,1,'Capitán inherits window toolbar');
 const ruben = fakeWindow('http://127.0.0.1:8790/ruben/index.html',session,'test-secret');
-assert.equal(ruben.elements.length,1,'Ruben inherits X');
+assert.equal(ruben.elements.length,1,'Ruben inherits window toolbar');
 const publicSite = fakeWindow('https://duiliomf.github.io/doinglio/',new Map(),undefined);
 assert.equal(publicSite.elements.length,0,'Public browser tab has no nonfunctional close control');
-console.log('OK: Desktop D28 startup build, cancel button, script syntax, shared X, specialist inheritance and isolated exit.');
+console.log('OK: Desktop D28 startup build, cancel button, script syntax, shared aligned toolbar with maximize, specialist inheritance and isolated exit.');
