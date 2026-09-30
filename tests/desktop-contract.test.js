@@ -13,7 +13,9 @@ new vm.Script(inline[1], {filename:'reloj_inicio.hta inline JS'});
 assert(splash.includes('id="startup-build"'), 'Startup version is present');
 assert(splash.includes('ICON="C:\\Sistemas\\DoingLioLauncher\\brain-davinci.ico"'), 'HTA declares brain icon, not system default');
 assert(splash.includes('class="brain-logo"') && splash.includes('src="brain-davinci.svg"'), 'Visible brain on splash');
-assert(splash.includes('left:78px;top:19px'), 'Startup build badge is next to X and not hidden at screen edge');
+assert(splash.includes('left:74px;top:14px') && splash.includes('height:48px'), 'Startup build badge aligns with the 48px X control');
+assert(splash.includes('WINDOWSTATE="maximize"'), 'HTA asks Windows to create the splash maximized from the start');
+assert(!splash.includes('window.moveTo(') && !splash.includes('window.resizeTo(') && !splash.includes('fullscreenWindow()'), 'Splash must not open normal and resize after load');
 const home = read('index.html');
 assert(home.includes('<div class="code" id="build-code"'), 'Visible main build is under brand, not behind right controls');
 assert(home.includes('rel="icon" type="image/svg+xml" href="brain-davinci.svg"'), 'DoingLio app favicon uses brain');
@@ -73,4 +75,4 @@ const ruben = fakeWindow('http://127.0.0.1:8790/ruben/index.html',session,'test-
 assert.equal(ruben.elements.length,1,'Ruben inherits window toolbar');
 const publicSite = fakeWindow('https://duiliomf.github.io/doinglio/',new Map(),undefined);
 assert.equal(publicSite.elements.length,0,'Public browser tab has no nonfunctional close control');
-console.log('OK: Desktop build dinámico, cancel button, script syntax, shared aligned toolbar with maximize, specialist inheritance and isolated exit.');
+console.log('OK: Desktop build dinámico, splash alineado y maximizado desde el arranque, cancel button, shared toolbar, specialist inheritance and isolated exit.');
