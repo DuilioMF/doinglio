@@ -325,8 +325,9 @@ if($CI){
 
 # Abrir la versión descargada en una ventana inmersiva propia.
 # Start-Process de una URL abre el navegador NORMAL (barra de direcciones).
-# Modo --app evita pestanas/barra y --start-fullscreen oculta tambien el
-# marco. El perfil propio evita que una ventana anterior absorba los flags.
+# Modo --app evita pestanas/barra y --start-maximized pide a Windows/Chromium
+# crear la ventana ya maximizada, sin pasar por fullscreen después del render.
+# El perfil propio evita que una ventana anterior absorba los flags.
 function Open-ImmersiveDoingLio([string]$Url) {
   $bases = @(
     [Environment]::GetEnvironmentVariable('ProgramFiles(x86)'),
@@ -349,7 +350,7 @@ function Open-ImmersiveDoingLio([string]$Url) {
       New-Item -ItemType Directory -Path $profile -Force | Out-Null
       $args = @(
         '--app=' + $Url,
-        '--start-fullscreen',
+        '--start-maximized',
         '--new-window',
         '--no-first-run',
         '--no-default-browser-check',
