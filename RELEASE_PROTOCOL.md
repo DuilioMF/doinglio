@@ -28,3 +28,12 @@ Tarjeta, PR, SHA anterior y actual, BUILD, ejecuciones verdes del test Windows/v
 
 ## Rollback
 Revertir el PR / commit con trazabilidad y volver a ejecutar las compuertas. Si hay una nueva publicación restauradora, registrar explícitamente la versión que se sirve sin reescribir el historial.
+
+## Entregas coordinadas padre e hijo (ejemplo D33.C95)
+1. Crear una única tarjeta de release con dos PR independientes y los SHA previos de cada proyecto.
+2. Publicar y comprobar **primero** el especialista que cambia (Capitán C95): fuente VERSION, cinco HTML, siete ventanas, recursos CSS/JS y paquete del conector. La CI de PR no reemplaza la prueba HTTP ni la conexión física.
+3. Tras Pages y VERSION público coincidentes, ejecutar la sincronización GitHub→n8n→Trello/Supabase del especialista. Registrar incidentes de entrega en la misma tarjeta.
+4. Publicar y comprobar **después** DoingLio D33: fuente BUILD, prueba Windows/ventanas y BUILD del dominio real.
+5. DoingLio compone el par con la VERSION **realmente servida o instalada** del hijo. Nunca fijar C95 ni R4 manualmente en el padre. La actualización de Capitán no altera la VERSION de Rubén.
+6. Conciliar las tarjetas índice de cada proyecto y la tarjeta operativa contra main, URL publicada y las evidencias de Actions. Mostrar claramente "pendiente de validación" si la instalación local o SQL no pudieron verificarse.
+7. Para instalaciones en PC, el launcher descarga el especialista y copia su VERSION al conector sin tocar credenciales. Antes de marcar "conectado", la respuesta /health debe informar la VERSION exacta, y deben validarse las consultas SQL funcionales si forman parte de la entrega.
