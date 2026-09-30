@@ -33,6 +33,8 @@ assert(server.includes("'/ _doinglio_exit'".replace(' ', '')), 'Local exit endpo
 assert(server.includes('browser-profile-'), 'Only isolated browser profiles may be killed');
 const launcher = read('launcher/doinglio_launcher.ps1');
 assert(launcher.includes('last_build.txt'), 'Launcher keeps installed build for splash');
+assert(launcher.includes("'--start-maximized'"), 'Desktop browser is created already maximized');
+assert(!launcher.includes("'--start-fullscreen'"), 'Desktop must not transition into browser fullscreen after opening');
 assert((launcher.match(/if\(Test-Path \$CancelFlag\)/g) || []).length === 2,
        'Cancellation is respected before SQL and before opening browser');
 assert(read('launcher/DoingLioInicio.vbs').includes('fs.DeleteFile cancelPath'),
