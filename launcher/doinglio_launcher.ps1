@@ -18,7 +18,7 @@ $CachedBuild = Join-Path $Root "last_build.txt"
 $CI = ($env:DOINGLIO_CI -eq "1")
 
 New-Item -ItemType Directory -Force -Path $Root,$Connector,$BridgeDir | Out-Null
-Add-Content -Path $Log -Value ("["+(Get-Date).ToString("s")+"] Inicio DoingLio D31")
+Add-Content -Path $Log -Value ("["+(Get-Date).ToString("s")+"] Inicio de lanzador DoingLio; BUILD se verifica tras descarga")
 
 function Log([string]$Message){
   Add-Content -Path $Log -Value ("["+(Get-Date).ToString("s")+"] "+$Message)
@@ -323,7 +323,7 @@ if($CI){
   exit 0
 }
 
-# D31: abrir la web local en una ventana inmersiva propia.
+# Abrir la versión descargada en una ventana inmersiva propia.
 # Start-Process de una URL abre el navegador NORMAL (barra de direcciones).
 # Modo --app evita pestanas/barra y --start-fullscreen oculta tambien el
 # marco. El perfil propio evita que una ventana anterior absorba los flags.
@@ -356,7 +356,7 @@ function Open-ImmersiveDoingLio([string]$Url) {
         '--user-data-dir="' + $profile + '"'
       )
       $process = Start-Process -FilePath $browser.path -ArgumentList $args -PassThru -ErrorAction Stop
-      Log ('D31: ventana inmersiva sin barra con ' + $browser.name + '; PID=' + $process.Id)
+      Log ('DoingLio: ventana inmersiva sin barra con ' + $browser.name + '; PID=' + $process.Id)
       return $true
     } catch {
       Log ('No pude abrir ' + $browser.name + ' en modo aplicacion: ' + $_.Exception.Message)
