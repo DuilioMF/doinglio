@@ -1,0 +1,24 @@
+const test=require('node:test');
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+
+const home=fs.readFileSync('index.html','utf8');
+const lola=fs.readFileSync('lola-redes.html','utf8');
+
+test('Lola Redes aparece en DoingLio',()=>{
+  assert.match(home,/id="open-lola"/);
+  assert.match(home,/href="\.\/lola-redes\.html"/);
+  assert.match(lola,/Hola, soy <em>Lola\.<\/em>/);
+});
+
+test('Lola muestra los cinco canales definidos',()=>{
+  for(const channel of ['Facebook','Instagram','WhatsApp','LinkedIn','TikTok']){
+    assert.ok(lola.includes(channel),'Falta '+channel);
+  }
+});
+
+test('Lola tiene saludo por voz y no pide contraseñas',()=>{
+  assert.match(lola,/SpeechSynthesisUtterance/);
+  assert.match(lola,/Hola, soy Lola\. ¿En qué puedo ayudarte\?/);
+  assert.ok(!/type=["']password["']/i.test(lola));
+});
