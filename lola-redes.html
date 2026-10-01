@@ -23,7 +23,7 @@
 </head>
 <body><div class="wrap">
 <header class="top"><a href="./index.html">← DoingLio</a><strong>LOLA REDES</strong><div class="company">EMPRESA · CONTEXTO DOINGLIO</div></header>
-<section class="hero"><div class="ey">ESPECIALISTA DE DOINGLIO · D35</div><h1>Hola, soy <em>Lola.</em></h1><p class="lead">¿En qué puedo ayudarte? Esta es la ventana inicial de comunicación y redes.</p><div class="voice">🎙 Conversación por voz · próxima conexión</div></section>
+<section class="hero"><div class="ey">ESPECIALISTA DE DOINGLIO · D35</div><h1>Hola, soy <em>Lola.</em></h1><p class="lead">¿En qué puedo ayudarte? Esta es la ventana inicial de comunicación y redes.</p><div class="voice">🎙 Conversación por voz · <button id="lola-greet" type="button" style="border:0;background:transparent;color:inherit;font:inherit;font-weight:800;cursor:pointer">Escuchar a Lola</button></div></section>
 <section class="channels">
 <article class="channel"><strong>Facebook</strong><br><span>● Sin conectar</span></article>
 <article class="channel"><strong>Instagram</strong><br><span>● Sin conectar</span></article>
@@ -40,4 +40,24 @@
 <article class="panel"><small>MEMORIA</small><h2>Actividad</h2><b>0</b><p>Historial de Lola.</p></article>
 </section>
 <div class="security">Las redes se conectarán mediante autorización oficial. Esta página no pide ni guarda contraseñas sociales.</div>
-</div></body></html>
+</div>
+<script>
+(function(){
+  const button=document.getElementById('lola-greet');
+  function greet(){
+    if(!('speechSynthesis' in window)){button.textContent='Voz no disponible';return}
+    window.speechSynthesis.cancel();
+    const voice=new SpeechSynthesisUtterance('Hola, soy Lola. ¿En qué puedo ayudarte?');
+    voice.lang='es-AR';
+    window.speechSynthesis.speak(voice);
+  }
+  button.addEventListener('click',greet);
+  try{
+    if(!sessionStorage.getItem('doinglio.lola.saludo')){
+      sessionStorage.setItem('doinglio.lola.saludo','1');
+      setTimeout(greet,500);
+    }
+  }catch(_){}
+})();
+</script>
+</body></html>
