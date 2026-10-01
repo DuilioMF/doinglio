@@ -9,7 +9,7 @@
   <link rel="icon" type="image/svg+xml" href="brain-davinci.svg" />
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,600&family=Inter:wght@400;500;600;700&display=swap');
-    :root{--bg:#080807;--paper:#11100d;--ink:#efe8d8;--muted:#9b9487;--gold:#cba45d;--orange:#dc8623;--cyan:#54bfc3;--line:#ffffff18}
+    :root{--bg:#080807;--paper:#11100d;--ink:#efe8d8;--muted:#9b9487;--gold:#cba45d;--orange:#dc8623;--cyan:#54bfc3;--rose:#e46f9a;--line:#ffffff18}
     *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,sans-serif}
     body{min-height:100vh;overflow-x:hidden;background:radial-gradient(circle at 50% 28%,#262118 0,#100f0c 34%,#080807 72%)}
     body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.12;background-image:linear-gradient(#d2b06a22 1px,transparent 1px),linear-gradient(90deg,#d2b06a22 1px,transparent 1px);background-size:44px 44px;mask-image:radial-gradient(circle at center,#000,transparent 80%)}
@@ -36,16 +36,18 @@
       72%{opacity:.42}
       100%{transform:translate(-50%,-50%) scale(5.8);opacity:0}
     }
-    main{position:relative;z-index:2}.systems{position:relative;z-index:2;width:min(1100px,92vw);margin:0 auto 24px;display:grid;grid-template-columns:1fr 1fr;gap:18px}
+    main{position:relative;z-index:2}.systems{position:relative;z-index:2;width:min(1100px,92vw);margin:0 auto 24px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
     .card{position:relative;min-height:240px;padding:28px 30px 26px;border:1px solid #ffffff16;background:linear-gradient(135deg,#ffffff0a,#ffffff03);text-decoration:none;color:inherit;overflow:hidden;transition:.35s ease}
     .card:hover{transform:translateY(-6px);border-color:var(--accent);box-shadow:0 22px 80px #0009,inset 0 0 70px var(--glow)}
     .card.rodolfo{--accent:var(--orange);--glow:#f0800018;background:radial-gradient(circle at 82% 42%,#8a451516,transparent 32%),linear-gradient(135deg,#ffffff0a,#ffffff03)}
     .card.ruben{--accent:var(--cyan);--glow:#1cbfc518;background:radial-gradient(circle at 82% 42%,#126b7118,transparent 32%),linear-gradient(135deg,#ffffff0a,#ffffff03)}
+    .card.lola{--accent:var(--rose);--glow:#e46f9a18;background:radial-gradient(circle at 82% 42%,#8b2d5418,transparent 32%),linear-gradient(135deg,#ffffff0a,#ffffff03)}
     .blueprint{position:absolute;right:20px;top:58px;width:250px;height:150px;opacity:.72;pointer-events:none}
     .blueprint *{fill:none;stroke:var(--accent);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
     .blueprint .soft{opacity:.24;stroke-dasharray:4 7}.blueprint .fill{fill:color-mix(in srgb,var(--accent) 8%,transparent)}
     .rodolfo .blueprint{width:270px;height:165px;right:15px;top:56px}
     .ruben .blueprint{width:255px;height:155px;right:20px;top:62px}
+    .lola .blueprint{width:250px;height:155px;right:16px;top:62px}
     .tagline{display:block;margin-top:11px;color:var(--accent);font:italic 15px "Cormorant Garamond",serif;letter-spacing:.03em}
     .num{position:absolute;right:24px;top:16px;font:italic 46px "Cormorant Garamond",serif;color:#ffffff10}.orbit{position:absolute;right:-75px;top:25px;width:230px;height:230px;border:1px solid color-mix(in srgb,var(--accent) 28%,transparent);border-radius:50%}
     .orbit:before,.orbit:after{content:"";position:absolute;border:1px solid color-mix(in srgb,var(--accent) 18%,transparent);border-radius:50%;inset:28px}.orbit:after{inset:62px}
@@ -55,6 +57,7 @@
     .local-install{position:relative;z-index:2;width:min(1100px,92vw);margin:0 auto 18px;display:flex;justify-content:center}.local-install a{display:inline-flex;align-items:center;gap:10px;padding:13px 18px;border:1px solid #dc862388;background:#dc862318;color:#ffd09b;text-decoration:none;font-size:11px;font-weight:800;letter-spacing:.08em}.local-install a:hover{border-color:#dc8623;background:#dc86232b}.local-install small{color:#8f887e;font-size:10px;letter-spacing:.04em}
     footer{position:relative;z-index:2;display:flex;justify-content:center;align-items:center;gap:18px;padding:10px 20px 14px;color:#625f59;font-size:7px;letter-spacing:.25em}footer i{width:36px;height:1px;background:#776239}
     @media(min-width:761px) and (max-height:760px){.top{padding:10px 4vw}.mark,.mark img{width:40px;height:40px}.hero{padding:12px 20px 10px}.hero h1{font-size:52px;margin:4px 0 7px}.hero p{font-size:12px}.systems{margin-bottom:10px}.card{min-height:215px;padding:22px 26px}.card h2{font-size:34px}.blueprint{transform:scale(.84);transform-origin:right center}.meta{bottom:16px;left:26px}.go{bottom:13px}footer{padding:6px 15px 10px}}
+    @media(max-width:980px){.systems{grid-template-columns:repeat(2,minmax(0,1fr))}}
     @media(max-width:760px){.code{display:none}.hero{padding-top:4vh}.hero h1{font-size:52px}.systems{grid-template-columns:1fr}.card{min-height:300px;padding:30px 25px}.card p{max-width:62%}.meta{left:25px}.blueprint{opacity:.42;right:-28px!important;top:85px!important;transform:scale(.9);transform-origin:right center}}
     @media(prefers-reduced-motion:reduce){*{transition:none!important}.doomsday-clock-bg{animation:none;transform:translate(-50%,-50%) scale(1.35);opacity:.28}}
   
@@ -62,7 +65,7 @@
 <link rel="stylesheet" href="theme.css">
 <script src="theme.js" defer></script>
 <script src="doinglio-window.js" defer></script>
-<script src="versiones.js?v=34" defer></script>
+<script src="versiones.js?v=35" defer></script>
 </head>
 <body>
   <div class="doomsday-bg" aria-hidden="true">
@@ -127,7 +130,7 @@
     </section>
 
     <section class="local-install" id="local-install">
-      <a href="INSTALAR_DOINGLIO.bat?v=34" download="INSTALAR_DOINGLIO.bat">
+      <a href="INSTALAR_DOINGLIO.bat?v=35" download="INSTALAR_DOINGLIO.bat">
         🧠 INSTALAR DOINGLIO EN EL ESCRITORIO
         <small>icono de cerebro · actualización automática</small>
       </a>
@@ -171,6 +174,23 @@
         <p>Del choque al cierre: presupuesto, autorización, repuestos, reparación, entrega, facturación y cobranza.</p>
         <span class="tagline">siniestro → presupuesto → reparación → entrega</span>
         <span class="meta" id="ruben-meta"><span class="dot"></span>GITHUB PAGES · WEB INDEPENDIENTE</span>
+        <span class="go">ABRIR <b>↗</b></span>
+      </a>
+
+      <a class="card lola" id="open-lola" href="./lola-redes.html" target="_self">
+        <span class="num">03</span>
+        <svg class="blueprint" viewBox="0 0 300 180" aria-hidden="true">
+          <circle class="soft" cx="224" cy="88" r="68"/>
+          <path d="M46 124c22-34 42-51 65-51 21 0 34 14 47 31 13-17 27-31 48-31 21 0 39 15 58 45"/>
+          <circle cx="83" cy="91" r="17"/><circle cx="156" cy="76" r="17"/><circle cx="229" cy="94" r="17"/>
+          <path d="M71 91h24M144 76h24M217 94h24"/>
+          <path d="M83 79v24M156 64v24M229 82v24"/>
+        </svg>
+        <span class="eyebrow">COMUNICACIÓN · REDES</span>
+        <h2>Lola Redes</h2>
+        <p>Facebook, Instagram, WhatsApp, LinkedIn y TikTok con una sola voz de marca.</p>
+        <span class="tagline">escuchar → crear → aprobar → publicar</span>
+        <span class="meta"><span class="dot"></span>DOINGLIO D35 · VENTANA INICIAL</span>
         <span class="go">ABRIR <b>↗</b></span>
       </a>
     </section>
