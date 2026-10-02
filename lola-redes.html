@@ -36,7 +36,7 @@ radial-gradient(circle at 22% 75%,#cba45d10 0,transparent 24%),
 <section id="auth-shell" aria-live="polite">
   <a class="auth-back" href="./index.html">← Volver a DoingLio</a>
   <div class="auth-card">
-    <div class="auth-brand"><img src="brain-davinci.svg" alt=""><span>DOINGLIO · LOLA REDES · D37</span></div>
+    <div class="auth-brand"><img src="brain-davinci.svg" alt=""><span>DOINGLIO · LOLA REDES · D38</span></div>
     <div class="auth-kicker">UNA SOLA IDENTIDAD</div>
     <h2>Entrá con tu <em>mail.</em></h2>
     <p class="auth-copy">Nada de usuario. Nada de contraseña. Te mandamos un enlace seguro y Lola te reconoce desde ahí.</p>
@@ -55,7 +55,7 @@ radial-gradient(circle at 22% 75%,#cba45d10 0,transparent 24%),
   <strong>LOLA REDES</strong>
   <div class="company"><span id="account-label">CUENTA DOINGLIO</span><button class="logout" id="logout" type="button">SALIR</button></div>
 </header>
-<section class="hero"><div class="ey">ESPECIALISTA DE DOINGLIO · D37</div><h1>Hola, soy <em>Lola.</em></h1><p class="lead">¿En qué puedo ayudarte? No necesitás saber de redes. Contame qué querés lograr y yo te voy guiando.</p><div class="voice">🎙 Conversación por voz · <button id="lola-greet" type="button" style="border:0;background:transparent;color:inherit;font:inherit;font-weight:800;cursor:pointer">Escuchar a Lola</button></div></section>
+<section class="hero"><div class="ey">ESPECIALISTA DE DOINGLIO · D38</div><h1>Hola, soy <em>Lola.</em></h1><p class="lead">¿En qué puedo ayudarte? No necesitás saber de redes. Contame qué querés lograr y yo te voy guiando.</p><div class="voice">🎙 Conversación por voz · <button id="lola-greet" type="button" style="border:0;background:transparent;color:inherit;font:inherit;font-weight:800;cursor:pointer">Escuchar a Lola</button></div></section>
 <section class="channels">
 <article class="channel"><strong>Facebook</strong><br><span>● Sin conectar</span></article>
 <article class="channel"><strong>Instagram</strong><br><span>● Sin conectar</span></article>
@@ -100,36 +100,112 @@ function showSession(session){
     account.textContent=mail;
   }
 }
+const OTP_PENDING_KEY='doinglio.auth.otp.pending.v1';
+const OTP_RESEND_WAIT_MS=10*60*1000;
+
+function cleanEmail(value){
+  return String(value||'').trim().toLowerCase();
+}
+function readPendingOtp(){
+  try{return JSON.parse(localStorage.getItem(OTP_PENDING_KEY)||'null')}catch(_){return null}
+}
+function rememberPendingOtp(mail){
+  try{localStorage.setItem(OTP_PENDING_KEY,JSON.stringify({email:mail,at:Date.now()}))}catch(_){}
+}
+function clearPendingOtp(){
+  try{localStorage.removeItem(OTP_PENDING_KEY)}catch(_){}
+}
+function hasRecentOtp(mail){
+  const pending=readPendingOtp();
+  return !!(pending&&pending.email===mail&&Number.isFinite(pending.at)&&Date.now()-pending.at<OTP_RESEND_WAIT_MS);
+}
+async function currentSession(){
+  const {data,error}=await sb.auth.getSession();
+  if(error)throw error;
+  return data.session;
+}
 async function init(){
-  const {data:{session}}=await sb.auth.getSession();
-  showSession(session);
+  setStatus('Comprobando tu identidad…');
+  try{
+    const session=await currentSession();
+    showSession(session);
+    if(session){
+      clearPendingOtp();
+      setStatus('');
+      return;
+    }
+  }catch(error){
+    console.warn('No se pudo recuperar la sesión DoingLio',error);
+  }
+  showSession(null);
+  setStatus('');
 }
 form.addEventListener('submit',async(event)=>{
   event.preventDefault();
-  const value=email.value.trim();
+  const value=cleanEmail(email.value);
   if(!value)return;
+
   submit.disabled=true;
-  submit.textContent='Enviando…';
-  setStatus('Preparando tu acceso…');
-  const redirectTo=new URL('lola-redes.html',window.location.href).href.split('#')[0].split('?')[0];
-  const {error}=await sb.auth.signInWithOtp({
-    email:value,
-    options:{emailRedirectTo:redirectTo,shouldCreateUser:true}
-  });
-  if(error){
-    setStatus('No pude enviar el acceso: '+error.message,'error');
-  }else{
-    setStatus('Listo. Te mandamos un enlace a <span class="auth-mail">'+value.replace(/[<>&"']/g,'')+'</span>. Abrilo y volvés directo a Lola.','ok');
+  submit.textContent='Entrando…';
+  setStatus('Comprobando si ya estás conectado…');
+
+  try{
+    // Regla principal: si DoingLio ya tiene una sesión válida, Lola entra directo.
+    const session=await currentSession();
+    if(session?.user){
+      clearPendingOtp();
+      showSession(session);
+      setStatus('Ya estabas identificado en DoingLio. Entrando a Lola…','ok');
+      return;
+    }
+
+    // Evita quemar el límite de Supabase por repetir "Entrar".
+    if(hasRecentOtp(value)){
+      setStatus('Ya enviamos un acceso hace unos minutos a <span class="auth-mail">'+value.replace(/[<>&"']/g,'')+'</span>. Revisá ese mail; no hace falta pedir otro.','ok');
+      return;
+    }
+
+    submit.textContent='Enviando…';
+    setStatus('No hay una sesión activa. Te envío un único acceso seguro…');
+    const redirectTo=new URL('lola-redes.html',window.location.href).href.split('#')[0].split('?')[0];
+    const {error}=await sb.auth.signInWithOtp({
+      email:value,
+      options:{emailRedirectTo:redirectTo,shouldCreateUser:true}
+    });
+    if(error){
+      const limited=/rate limit|email limit|too many/i.test(error.message||'');
+      setStatus(
+        limited
+          ? 'Ya hubo demasiados envíos recientes. No sigas apretando Entrar: usá el último mail recibido o esperá a que se libere el límite.'
+          : 'No pude enviar el acceso: '+error.message,
+        'error'
+      );
+    }else{
+      rememberPendingOtp(value);
+      setStatus('Listo. Te mandamos un único enlace a <span class="auth-mail">'+value.replace(/[<>&"']/g,'')+'</span>. Abrilo y Lola va a conservar la sesión.','ok');
+    }
+  }catch(error){
+    setStatus('No pude comprobar tu sesión: '+(error?.message||error),'error');
+  }finally{
+    submit.disabled=false;
+    submit.textContent='Entrar';
   }
-  submit.disabled=false;
-  submit.textContent='Entrar';
 });
 document.getElementById('logout').addEventListener('click',async()=>{
+  clearPendingOtp();
   await sb.auth.signOut();
   showSession(null);
   setStatus('');
 });
-sb.auth.onAuthStateChange((_event,session)=>showSession(session));
+sb.auth.onAuthStateChange((event,session)=>{
+  showSession(session);
+  if(session){
+    clearPendingOtp();
+    if(event==='SIGNED_IN'){
+      try{history.replaceState({},document.title,location.pathname+location.search)}catch(_){}
+    }
+  }
+});
 init();
 
 const button=document.getElementById('lola-greet');

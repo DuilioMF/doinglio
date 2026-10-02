@@ -22,3 +22,11 @@ test('Lola tiene saludo por voz y no pide contraseñas',()=>{
   assert.match(lola,/Hola, soy Lola\. ¿En qué puedo ayudarte\?/);
   assert.ok(!/type=["']password["']/i.test(lola));
 });
+
+test('Lola reutiliza sesión antes de enviar otro mail',()=>{
+  assert.match(lola,/Comprobando si ya estás conectado/);
+  assert.match(lola,/const session=await currentSession\(\)/);
+  assert.match(lola,/if\(session\?\.user\)/);
+  assert.match(lola,/OTP_RESEND_WAIT_MS=10\*60\*1000/);
+  assert.match(lola,/No sigas apretando Entrar/);
+});
