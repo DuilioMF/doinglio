@@ -36,7 +36,7 @@ radial-gradient(circle at 22% 75%,#cba45d10 0,transparent 24%),
 <section id="auth-shell" aria-live="polite">
   <a class="auth-back" href="./index.html">← Volver a DoingLio</a>
   <div class="auth-card">
-    <div class="auth-brand"><img src="brain-davinci.svg" alt=""><span>DOINGLIO · LOLA REDES · D39</span></div>
+    <div class="auth-brand"><img src="brain-davinci.svg" alt=""><span>DOINGLIO · LOLA REDES · D40</span></div>
     <div class="auth-kicker">UNA SOLA IDENTIDAD</div>
     <h2>Entrá con tu <em>mail.</em></h2>
     <p class="auth-copy">Nada de usuario. Nada de contraseña. Te mandamos un enlace seguro y Lola te reconoce desde ahí.</p>
@@ -55,7 +55,7 @@ radial-gradient(circle at 22% 75%,#cba45d10 0,transparent 24%),
   <strong>LOLA REDES</strong>
   <div class="company"><span id="account-label">CUENTA DOINGLIO</span><button class="logout" id="logout" type="button">SALIR</button></div>
 </header>
-<section class="hero"><div class="ey">ESPECIALISTA DE DOINGLIO · D39</div><h1>Hola, soy <em>Lola.</em></h1><p class="lead">¿En qué puedo ayudarte? No necesitás saber de redes. Contame qué querés lograr y yo te voy guiando.</p><div class="voice">🎙 Conversación por voz · <button id="lola-greet" type="button" style="border:0;background:transparent;color:inherit;font:inherit;font-weight:800;cursor:pointer">Escuchar a Lola</button></div></section>
+<section class="hero"><div class="ey">ESPECIALISTA DE DOINGLIO · D40</div><h1>Hola, soy <em>Lola.</em></h1><p class="lead">¿En qué puedo ayudarte? No necesitás saber de redes. Contame qué querés lograr y yo te voy guiando.</p><div class="voice">🎙 Conversación por voz · <button id="lola-greet" type="button" style="border:0;background:transparent;color:inherit;font:inherit;font-weight:800;cursor:pointer">Escuchar a Lola</button></div></section>
 <section class="channels">
 <article class="channel"><strong>Facebook</strong><br><span>● Sin conectar</span></article>
 <article class="channel"><strong>Instagram</strong><br><span>● Sin conectar</span></article>
@@ -167,7 +167,7 @@ form.addEventListener('submit',async(event)=>{
 
     submit.textContent='Enviando…';
     setStatus('No hay una sesión activa. Te envío un único acceso seguro…');
-    const redirectTo=new URL('lola-redes.html',window.location.href).href.split('#')[0].split('?')[0];
+    const redirectTo=new URL('./',window.location.href).href.split('#')[0].split('?')[0];
     const {error}=await sb.auth.signInWithOtp({
       email:value,
       options:{emailRedirectTo:redirectTo,shouldCreateUser:true}

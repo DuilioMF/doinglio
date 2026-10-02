@@ -37,3 +37,10 @@ test('Lola permite reenviar si el usuario borró el correo',()=>{
   assert.match(lola,/form\.requestSubmit\(\)/);
   assert.match(lola,/Si lo borraste/);
 });
+
+test('retorno de acceso vuelve a Lola antes de perder la sesión',()=>{
+  assert.match(home,/doinglio-login-return/);
+  assert.match(home,/location\.hash\.length>80/);
+  assert.match(home,/lola-redes\.html/);
+  assert.match(lola,/const redirectTo=new URL\('\.\/'/);
+});
