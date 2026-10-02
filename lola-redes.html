@@ -25,7 +25,7 @@ body.authenticated .logout{display:inline}
 radial-gradient(circle at 50% 38%,#e46f9a1f 0,transparent 32%),
 radial-gradient(circle at 22% 75%,#cba45d10 0,transparent 24%),
 #080807;transition:.45s ease}
-.auth-card{width:min(560px,94vw);border:1px solid #e46f9a55;background:#100f0dcc;border-radius:28px;padding:38px;box-shadow:0 40px 120px #00000080;backdrop-filter:blur(18px);position:relative;overflow:hidden}
+.auth-back{position:fixed;top:22px;left:24px;z-index:2;color:#ddd0c0;text-decoration:none;font-size:13px;padding:10px 12px;border:1px solid #ffffff18;border-radius:999px;background:#ffffff05;backdrop-filter:blur(10px)}.auth-back:hover{border-color:#e46f9a66;color:#f4d6e1}.auth-card{width:min(560px,94vw);border:1px solid #e46f9a55;background:#100f0dcc;border-radius:28px;padding:38px;box-shadow:0 40px 120px #00000080;backdrop-filter:blur(18px);position:relative;overflow:hidden}
 .auth-card:before{content:"";position:absolute;inset:-35% 10% auto;height:220px;background:radial-gradient(circle,#e46f9a22,transparent 65%);pointer-events:none}
 .auth-brand{display:flex;align-items:center;gap:12px;color:#f0d7e1;font-size:11px;letter-spacing:.22em}.auth-brand img{width:34px;height:34px}.auth-kicker{margin:34px 0 10px;color:var(--rose);font-size:10px;letter-spacing:.25em}.auth-card h2{font-family:"Cormorant Garamond",Georgia,serif;font-size:50px;line-height:.98;margin:0 0 16px;font-weight:500}.auth-card h2 em{color:var(--rose);font-style:italic}.auth-copy{color:#aaa196;line-height:1.7;margin:0 0 26px}.auth-form{display:flex;gap:10px;align-items:stretch}.auth-form input{flex:1;min-width:0;border:1px solid #ffffff1f;background:#ffffff08;color:var(--ink);border-radius:14px;padding:15px 16px;outline:none}.auth-form input:focus{border-color:#e46f9a77;box-shadow:0 0 0 3px #e46f9a12}.auth-form button{border:1px solid #e46f9a66;background:#e46f9a17;color:#f4d6e1;border-radius:14px;padding:0 18px;font-weight:800;cursor:pointer}.auth-form button:disabled{opacity:.5;cursor:wait}
 .auth-status{min-height:24px;margin-top:14px;font-size:12px;color:#bdb3aa}.auth-status.ok{color:#f2c8d8}.auth-status.error{color:#ff9a9a}.auth-note{margin-top:22px;padding-top:18px;border-top:1px solid var(--line);font-size:10px;color:#746f68;line-height:1.6}.auth-mail{color:#f0c2d2;font-weight:700}
@@ -34,6 +34,7 @@ radial-gradient(circle at 22% 75%,#cba45d10 0,transparent 24%),
 </head>
 <body>
 <section id="auth-shell" aria-live="polite">
+  <a class="auth-back" href="./index.html">← Volver a DoingLio</a>
   <div class="auth-card">
     <div class="auth-brand"><img src="brain-davinci.svg" alt=""><span>DOINGLIO · LOLA REDES</span></div>
     <div class="auth-kicker">UNA SOLA IDENTIDAD</div>
