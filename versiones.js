@@ -12,7 +12,11 @@
     {name:'Rubén',key:'ruben',short:'R',label:document.getElementById('ruben-meta'),
       remote:'https://duiliomf.github.io/ruben/VERSION',
       main:'https://raw.githubusercontent.com/DuilioMF/ruben/main/VERSION',
-      local:'./ruben/VERSION'}
+      local:'./ruben/VERSION'},
+    {name:'Lola',key:'lola',short:'L',label:document.getElementById('lola-meta'),
+      remote:'https://duiliomf.github.io/lola-redes/VERSION',
+      main:'https://raw.githubusercontent.com/DuilioMF/lola-redes/main/VERSION',
+      local:'./lola-redes/VERSION'}
   ];
   async function getNumber(url){
     const controller=new AbortController();
@@ -53,8 +57,10 @@
     if(local){
       const cap=document.getElementById('open-capitan');
       const rub=document.getElementById('open-ruben');
+      const lol=document.getElementById('open-lola');
       if(cap)cap.href='./capitan-rodolfo/index.html';
       if(rub)rub.href='./ruben/index.html';
+      if(lol)lol.href='./lola-redes/index.html';
       const install=document.getElementById('local-install');
       if(install)install.style.display='none';
     }

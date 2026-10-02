@@ -75,6 +75,8 @@ const child = fakeWindow('http://127.0.0.1:8790/capitan-rodolfo/index.html',sess
 assert.equal(child.elements.length,1,'Capitán inherits window toolbar');
 const ruben = fakeWindow('http://127.0.0.1:8790/ruben/index.html',session,'test-secret');
 assert.equal(ruben.elements.length,1,'Ruben inherits window toolbar');
+const lola = fakeWindow('http://127.0.0.1:8790/lola-redes/index.html',session,'test-secret');
+assert.equal(lola.elements.length,1,'Lola inherits window toolbar');
 const publicSite = fakeWindow('https://duiliomf.github.io/doinglio/',new Map(),undefined);
 assert.equal(publicSite.elements.length,0,'Public browser tab has no nonfunctional close control');
 console.log('OK: Desktop build dinámico, splash alineado y maximizado desde el arranque, cancel button, shared toolbar, specialist inheritance and isolated exit.');

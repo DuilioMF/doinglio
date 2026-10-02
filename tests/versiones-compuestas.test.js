@@ -13,7 +13,7 @@ test('BUILD oficial y recursos cacheados al número correcto',()=>{
 });
 test('Composición independiente de los especialistas y estado real',()=>{
  const js=read('versiones.js');
- for(const fragment of ["getNumber('./BUILD')",'/capitan-rodolfo/VERSION','/ruben/VERSION',
+ for(const fragment of ["getNumber('./BUILD')",'/capitan-rodolfo/VERSION','/ruben/VERSION','/lola-redes/VERSION',
    'GitHub main; publicación sin comprobar','/_doinglio_diagnostic','CONVECTOR_NO_USADO'].slice(0,-1)){
     assert.ok(js.includes(fragment),'Falta control de versión: '+fragment);
  }
@@ -23,6 +23,7 @@ test('Barra local identifica al especialista de la página',()=>{
  const js=read('doinglio-window.js');
  for(const text of ["location.pathname.indexOf('/capitan-rodolfo/')",
                     "location.pathname.indexOf('/ruben/')",
+                    "location.pathname.indexOf('/lola-redes/')",
                     "PANTALLA v","SIN VERIFICAR"])
    assert.ok(js.includes(text),'Falta control '+text);
 });
@@ -32,4 +33,5 @@ test('El iniciador no declara versiones fijas distintas de BUILD',()=>{
  assert.ok(!script.includes('Inicio DoingLio D31'));
  assert.ok(!script.includes('D31: ventana'));
  assert.ok(script.includes("Join-Path $Runtime 'BUILD'"));
+ assert.ok(script.includes('Expand-Repo -Repo "lola-redes"'));
 });

@@ -172,6 +172,8 @@ try {
   Expand-Repo -Repo "capitan-rodolfo" -Destination (Join-Path $BuildRuntime "capitan-rodolfo") -Work $work
   Log "Descargando Ruben"
   Expand-Repo -Repo "ruben" -Destination (Join-Path $BuildRuntime "ruben") -Work $work
+  Log "Descargando Lola Redes"
+  Expand-Repo -Repo "lola-redes" -Destination (Join-Path $BuildRuntime "lola-redes") -Work $work
 
   # El codigo descargado y el bridge residente deben quedar en la MISMA version.
   # Antes de reemplazar el archivo, retirar solo instancias de nuestro conector viejo.

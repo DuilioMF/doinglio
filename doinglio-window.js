@@ -106,7 +106,8 @@ function mount() {
   } else {
     // El escritorio muestra la composición real del especialista que está abierto.
     var part = location.pathname.indexOf('/capitan-rodolfo/')===0 ? {code:'C',folder:'capitan-rodolfo'} :
-      location.pathname.indexOf('/ruben/')===0 ? {code:'R',folder:'ruben'} : null;
+      location.pathname.indexOf('/ruben/')===0 ? {code:'R',folder:'ruben'} :
+      location.pathname.indexOf('/lola-redes/')===0 ? {code:'L',folder:'lola-redes'} : null;
     if (part) {
       version = document.createElement('span');
       version.id = 'build-code';
