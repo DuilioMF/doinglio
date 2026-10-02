@@ -28,7 +28,7 @@ radial-gradient(circle at 22% 75%,#cba45d10 0,transparent 24%),
 .auth-back{position:fixed;top:22px;left:24px;z-index:2;color:#ddd0c0;text-decoration:none;font-size:13px;padding:10px 12px;border:1px solid #ffffff18;border-radius:999px;background:#ffffff05;backdrop-filter:blur(10px)}.auth-back:hover{border-color:#e46f9a66;color:#f4d6e1}.auth-card{width:min(560px,94vw);border:1px solid #e46f9a55;background:#100f0dcc;border-radius:28px;padding:38px;box-shadow:0 40px 120px #00000080;backdrop-filter:blur(18px);position:relative;overflow:hidden}
 .auth-card:before{content:"";position:absolute;inset:-35% 10% auto;height:220px;background:radial-gradient(circle,#e46f9a22,transparent 65%);pointer-events:none}
 .auth-brand{display:flex;align-items:center;gap:12px;color:#f0d7e1;font-size:11px;letter-spacing:.22em}.auth-brand img{width:34px;height:34px}.auth-kicker{margin:34px 0 10px;color:var(--rose);font-size:10px;letter-spacing:.25em}.auth-card h2{font-family:"Cormorant Garamond",Georgia,serif;font-size:50px;line-height:.98;margin:0 0 16px;font-weight:500}.auth-card h2 em{color:var(--rose);font-style:italic}.auth-copy{color:#aaa196;line-height:1.7;margin:0 0 26px}.auth-form{display:flex;gap:10px;align-items:stretch}.auth-form input{flex:1;min-width:0;border:1px solid #ffffff1f;background:#ffffff08;color:var(--ink);border-radius:14px;padding:15px 16px;outline:none}.auth-form input:focus{border-color:#e46f9a77;box-shadow:0 0 0 3px #e46f9a12}.auth-form button{border:1px solid #e46f9a66;background:#e46f9a17;color:#f4d6e1;border-radius:14px;padding:0 18px;font-weight:800;cursor:pointer}.auth-form button:disabled{opacity:.5;cursor:wait}
-.auth-status{min-height:24px;margin-top:14px;font-size:12px;color:#bdb3aa}.auth-status.ok{color:#f2c8d8}.auth-status.error{color:#ff9a9a}.auth-note{margin-top:22px;padding-top:18px;border-top:1px solid var(--line);font-size:10px;color:#746f68;line-height:1.6}.auth-mail{color:#f0c2d2;font-weight:700}
+.auth-status{min-height:24px;margin-top:14px;font-size:12px;color:#bdb3aa}.auth-status.ok{color:#f2c8d8}.auth-status.error{color:#ff9a9a}.auth-resend{margin-left:8px;border:1px solid #e46f9a66;background:#e46f9a12;color:#f4d6e1;border-radius:999px;padding:5px 9px;cursor:pointer;font-size:11px}.auth-note{margin-top:22px;padding-top:18px;border-top:1px solid var(--line);font-size:10px;color:#746f68;line-height:1.6}.auth-mail{color:#f0c2d2;font-weight:700}
 @media(max-width:850px){.channels{grid-template-columns:repeat(2,1fr)}.workspace{grid-template-columns:repeat(2,1fr)}}@media(max-width:560px){.channels,.workspace{grid-template-columns:1fr}.top{flex-direction:column;align-items:flex-start}.auth-card{padding:28px 22px}.auth-card h2{font-size:42px}.auth-form{flex-direction:column}.auth-form button{padding:14px 18px}}
 </style>
 </head>
@@ -36,7 +36,7 @@ radial-gradient(circle at 22% 75%,#cba45d10 0,transparent 24%),
 <section id="auth-shell" aria-live="polite">
   <a class="auth-back" href="./index.html">← Volver a DoingLio</a>
   <div class="auth-card">
-    <div class="auth-brand"><img src="brain-davinci.svg" alt=""><span>DOINGLIO · LOLA REDES · D38</span></div>
+    <div class="auth-brand"><img src="brain-davinci.svg" alt=""><span>DOINGLIO · LOLA REDES · D39</span></div>
     <div class="auth-kicker">UNA SOLA IDENTIDAD</div>
     <h2>Entrá con tu <em>mail.</em></h2>
     <p class="auth-copy">Nada de usuario. Nada de contraseña. Te mandamos un enlace seguro y Lola te reconoce desde ahí.</p>
@@ -55,7 +55,7 @@ radial-gradient(circle at 22% 75%,#cba45d10 0,transparent 24%),
   <strong>LOLA REDES</strong>
   <div class="company"><span id="account-label">CUENTA DOINGLIO</span><button class="logout" id="logout" type="button">SALIR</button></div>
 </header>
-<section class="hero"><div class="ey">ESPECIALISTA DE DOINGLIO · D38</div><h1>Hola, soy <em>Lola.</em></h1><p class="lead">¿En qué puedo ayudarte? No necesitás saber de redes. Contame qué querés lograr y yo te voy guiando.</p><div class="voice">🎙 Conversación por voz · <button id="lola-greet" type="button" style="border:0;background:transparent;color:inherit;font:inherit;font-weight:800;cursor:pointer">Escuchar a Lola</button></div></section>
+<section class="hero"><div class="ey">ESPECIALISTA DE DOINGLIO · D39</div><h1>Hola, soy <em>Lola.</em></h1><p class="lead">¿En qué puedo ayudarte? No necesitás saber de redes. Contame qué querés lograr y yo te voy guiando.</p><div class="voice">🎙 Conversación por voz · <button id="lola-greet" type="button" style="border:0;background:transparent;color:inherit;font:inherit;font-weight:800;cursor:pointer">Escuchar a Lola</button></div></section>
 <section class="channels">
 <article class="channel"><strong>Facebook</strong><br><span>● Sin conectar</span></article>
 <article class="channel"><strong>Instagram</strong><br><span>● Sin conectar</span></article>
@@ -161,7 +161,7 @@ form.addEventListener('submit',async(event)=>{
 
     // Evita quemar el límite de Supabase por repetir "Entrar".
     if(hasRecentOtp(value)){
-      setStatus('Ya enviamos un acceso hace unos minutos a <span class="auth-mail">'+value.replace(/[<>&"']/g,'')+'</span>. Revisá ese mail; no hace falta pedir otro.','ok');
+      setStatus('Ya enviamos un acceso hace unos minutos a <span class="auth-mail">'+value.replace(/[<>&"']/g,'')+'</span>. Si lo borraste, <button class="auth-resend" id="auth-resend" type="button">reenviar acceso</button>.','ok');
       return;
     }
 
@@ -190,6 +190,13 @@ form.addEventListener('submit',async(event)=>{
     submit.disabled=false;
     submit.textContent='Entrar';
   }
+});
+status.addEventListener('click',(event)=>{
+  const resend=event.target.closest('#auth-resend');
+  if(!resend)return;
+  clearPendingOtp();
+  setStatus('Listo. Pedimos un nuevo acceso porque el anterior ya no está.');
+  form.requestSubmit();
 });
 document.getElementById('logout').addEventListener('click',async()=>{
   clearPendingOtp();

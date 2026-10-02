@@ -30,3 +30,10 @@ test('Lola reutiliza sesión antes de enviar otro mail',()=>{
   assert.match(lola,/OTP_RESEND_WAIT_MS=10\*60\*1000/);
   assert.match(lola,/No sigas apretando Entrar/);
 });
+
+test('Lola permite reenviar si el usuario borró el correo',()=>{
+  assert.match(lola,/id="auth-resend"/);
+  assert.match(lola,/clearPendingOtp\(\);/);
+  assert.match(lola,/form\.requestSubmit\(\)/);
+  assert.match(lola,/Si lo borraste/);
+});
