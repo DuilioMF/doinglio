@@ -2,202 +2,291 @@
 <html lang="es">
 <head>
 <script data-doinglio-theme-init>(function(){try{document.documentElement.dataset.theme=localStorage.getItem('doinglio.theme')||'dark'}catch(_){document.documentElement.dataset.theme='dark'}})();</script>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="theme-color" content="#090907" />
-  <title>DoingLio · Cuaderno Maestro</title>
-  <link rel="icon" type="image/svg+xml" href="brain-davinci.svg" />
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,600&family=Inter:wght@400;500;600;700&display=swap');
-    :root{--bg:#080807;--paper:#11100d;--ink:#efe8d8;--muted:#9b9487;--gold:#cba45d;--orange:#dc8623;--cyan:#54bfc3;--rose:#e46f9a;--line:#ffffff18}
-    *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,sans-serif}
-    body{min-height:100vh;overflow-x:hidden;background:radial-gradient(circle at 50% 28%,#262118 0,#100f0c 34%,#080807 72%)}
-    body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.12;background-image:linear-gradient(#d2b06a22 1px,transparent 1px),linear-gradient(90deg,#d2b06a22 1px,transparent 1px);background-size:44px 44px;mask-image:radial-gradient(circle at center,#000,transparent 80%)}
-    .top{position:relative;z-index:2;display:flex;justify-content:space-between;align-items:center;padding:16px 5vw;border-bottom:1px solid #ffffff10}
-    .brand{display:flex;gap:12px;align-items:center}.mark{width:46px;height:46px;display:grid;place-items:center}
-    .mark img{width:46px;height:46px;display:block;filter:drop-shadow(0 0 10px #d9823b22)}
-    .brand strong{display:block;font-size:14px;letter-spacing:.34em}.brand small{display:block;margin-top:5px;color:#8f887a;font-size:8px;letter-spacing:.24em}
-    .code{display:inline-flex;align-items:center;gap:8px;margin-top:8px;padding:6px 11px;border:1px solid #c58b4b88;border-radius:9px;background:#20160fcc;color:#ffce83;font:800 13px/1.2 Inter,Segoe UI,sans-serif;letter-spacing:.16em;user-select:text;box-shadow:0 0 18px #d9823b14}
-    .code:before{content:'EDICIÓN';font-size:9px;letter-spacing:.18em;color:#d1b28b}
-    .hero{position:relative;z-index:2;text-align:center;padding:3vh 20px 2.4vh}.hero small{font-size:9px;letter-spacing:.48em;color:#c69a4b}.hero h1{font:600 clamp(48px,6vw,78px)/.9 "Cormorant Garamond",serif;letter-spacing:-.04em;margin:10px 0 12px}.hero h1 em{font-weight:500;color:#d7ad5d}.hero p{color:#8f887e;font-size:14px;letter-spacing:.06em;margin:0}
-    .doomsday-bg{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;display:grid;place-items:center}
-    .doomsday-bg:after{content:"";position:absolute;inset:0;background:radial-gradient(circle at center,transparent 0 35%,#08080744 68%,#080807cc 100%)}
-    .doomsday-clock-bg{position:absolute;left:50%;top:50%;width:min(62vw,660px);height:auto;overflow:visible;transform-origin:center;animation:doomExpand 10s cubic-bezier(.16,.63,.25,1) infinite;will-change:transform,opacity;filter:drop-shadow(0 0 24px #dc862344)}
-    .doom-spiral{fill:none;stroke:url(#spiralGlow);stroke-width:2.1;stroke-linecap:round}
-    .doom-orbit{fill:none;stroke:#d7ad5d24;stroke-width:1}.doom-orbit.dash{stroke-dasharray:3 9}
-    .doom-tick{stroke:#d7ad5d5e;stroke-width:1.4}.doom-tick.major{stroke:#f0c36e9e;stroke-width:2.1}
-    .doom-hand{stroke:#f2d09a;stroke-linecap:round;filter:drop-shadow(0 0 5px #dc862388)}.doom-hand.hour{stroke-width:7}.doom-hand.minute{stroke-width:5}
-    .doom-center-ring{fill:#0b0907;stroke:#f3b35a;stroke-width:2.5}.doom-center{fill:#ffd083}
-    .doom-trail-point{fill:#df8b2e;filter:drop-shadow(0 0 9px #df8b2e);opacity:.9}
-    @keyframes doomExpand{
-      0%{transform:translate(-50%,-50%) scale(.008);opacity:0}
-      7%{opacity:.30}
-      28%{opacity:.54}
-      72%{opacity:.42}
-      100%{transform:translate(-50%,-50%) scale(5.8);opacity:0}
-    }
-    main{position:relative;z-index:2}.systems{position:relative;z-index:2;width:min(1100px,92vw);margin:0 auto 24px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
-    .card{position:relative;min-height:240px;padding:28px 30px 26px;border:1px solid #ffffff16;background:linear-gradient(135deg,#ffffff0a,#ffffff03);text-decoration:none;color:inherit;overflow:hidden;transition:.35s ease}
-    .card:hover{transform:translateY(-6px);border-color:var(--accent);box-shadow:0 22px 80px #0009,inset 0 0 70px var(--glow)}
-    .card.rodolfo{--accent:var(--orange);--glow:#f0800018;background:radial-gradient(circle at 82% 42%,#8a451516,transparent 32%),linear-gradient(135deg,#ffffff0a,#ffffff03)}
-    .card.ruben{--accent:var(--cyan);--glow:#1cbfc518;background:radial-gradient(circle at 82% 42%,#126b7118,transparent 32%),linear-gradient(135deg,#ffffff0a,#ffffff03)}
-    .card.lola{--accent:var(--rose);--glow:#e46f9a18;background:radial-gradient(circle at 82% 42%,#8b2d5418,transparent 32%),linear-gradient(135deg,#ffffff0a,#ffffff03)}
-    .blueprint{position:absolute;right:20px;top:58px;width:250px;height:150px;opacity:.72;pointer-events:none}
-    .blueprint *{fill:none;stroke:var(--accent);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
-    .blueprint .soft{opacity:.24;stroke-dasharray:4 7}.blueprint .fill{fill:color-mix(in srgb,var(--accent) 8%,transparent)}
-    .rodolfo .blueprint{width:270px;height:165px;right:15px;top:56px}
-    .ruben .blueprint{width:255px;height:155px;right:20px;top:62px}
-    .lola .blueprint{width:250px;height:155px;right:16px;top:62px}
-    .tagline{display:block;margin-top:11px;color:var(--accent);font:italic 15px "Cormorant Garamond",serif;letter-spacing:.03em}
-    .num{position:absolute;right:24px;top:16px;font:italic 46px "Cormorant Garamond",serif;color:#ffffff10}.orbit{position:absolute;right:-75px;top:25px;width:230px;height:230px;border:1px solid color-mix(in srgb,var(--accent) 28%,transparent);border-radius:50%}
-    .orbit:before,.orbit:after{content:"";position:absolute;border:1px solid color-mix(in srgb,var(--accent) 18%,transparent);border-radius:50%;inset:28px}.orbit:after{inset:62px}
-    .eyebrow{font-size:8px;letter-spacing:.3em;color:var(--accent)}.card h2{font:600 38px "Cormorant Garamond",serif;margin:11px 0 9px}.card p{max-width:72%;font-size:12px;line-height:1.7;color:#a29c91}
-    .meta{position:absolute;left:30px;bottom:22px;font-size:8px;letter-spacing:.16em;color:#aaa398}.dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 13px var(--accent);margin-right:10px}
-    .go{position:absolute;right:24px;bottom:19px;font-size:8px;letter-spacing:.18em;color:#bbb4aa}.go b{font-size:20px;color:var(--accent);margin-left:8px}.pending{opacity:.92}.pending .go{color:#7d7770}
-    .local-install{position:relative;z-index:2;width:min(1100px,92vw);margin:0 auto 18px;display:flex;justify-content:center}.local-install a{display:inline-flex;align-items:center;gap:10px;padding:13px 18px;border:1px solid #dc862388;background:#dc862318;color:#ffd09b;text-decoration:none;font-size:11px;font-weight:800;letter-spacing:.08em}.local-install a:hover{border-color:#dc8623;background:#dc86232b}.local-install small{color:#8f887e;font-size:10px;letter-spacing:.04em}
-    footer{position:relative;z-index:2;display:flex;justify-content:center;align-items:center;gap:18px;padding:10px 20px 14px;color:#625f59;font-size:7px;letter-spacing:.25em}footer i{width:36px;height:1px;background:#776239}
-    @media(min-width:761px) and (max-height:760px){.top{padding:10px 4vw}.mark,.mark img{width:40px;height:40px}.hero{padding:12px 20px 10px}.hero h1{font-size:52px;margin:4px 0 7px}.hero p{font-size:12px}.systems{margin-bottom:10px}.card{min-height:215px;padding:22px 26px}.card h2{font-size:34px}.blueprint{transform:scale(.84);transform-origin:right center}.meta{bottom:16px;left:26px}.go{bottom:13px}footer{padding:6px 15px 10px}}
-    @media(max-width:980px){.systems{grid-template-columns:repeat(2,minmax(0,1fr))}}
-    @media(max-width:760px){.code{display:none}.hero{padding-top:4vh}.hero h1{font-size:52px}.systems{grid-template-columns:1fr}.card{min-height:300px;padding:30px 25px}.card p{max-width:62%}.meta{left:25px}.blueprint{opacity:.42;right:-28px!important;top:85px!important;transform:scale(.9);transform-origin:right center}}
-    @media(prefers-reduced-motion:reduce){*{transition:none!important}.doomsday-clock-bg{animation:none;transform:translate(-50%,-50%) scale(1.35);opacity:.28}}
-  
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#080807">
+<meta name="description" content="DoingLio · ecosistema inteligente de Revalsoft IA. Una puerta de entrada, múltiples especialistas.">
+<title>DoingLio · Ecosistema inteligente</title>
+<link rel="icon" type="image/svg+xml" href="brain-davinci.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#080807;--paper:#11100d;--ink:#efe8d8;--muted:#9b9487;
+  --gold:#cba45d;--orange:#dc8623;--cyan:#54bfc3;--rose:#e46f9a;
+  --line:#ffffff18;--line2:#ffffff0d;--shadow:#000000a8;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;background:var(--bg)}
+body{margin:0;min-height:100%;overflow-x:hidden;background:
+radial-gradient(circle at 50% 15%,#2a2318 0,#14110d 28%,#080807 65%);
+color:var(--ink);font-family:Inter,system-ui,sans-serif}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.12;
+background-image:linear-gradient(#d2b06a22 1px,transparent 1px),linear-gradient(90deg,#d2b06a22 1px,transparent 1px);
+background-size:44px 44px;mask-image:radial-gradient(circle at center,#000,transparent 82%)}
+body:after{content:"";position:fixed;inset:-20%;pointer-events:none;z-index:0;
+background:conic-gradient(from 10deg at 50% 45%,transparent 0 20%,#dc86230a 24%,transparent 30% 52%,#54bfc309 58%,transparent 66% 80%,#e46f9a08 86%,transparent 94%);
+animation:ambientTurn 32s linear infinite}
+@keyframes ambientTurn{to{transform:rotate(360deg)}}
+a{color:inherit}
+.top{position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;padding:14px 4.5vw;
+border-bottom:1px solid var(--line2);background:#080807b8;backdrop-filter:blur(18px)}
+.brand{display:flex;align-items:center;gap:12px;text-decoration:none}
+.mark{width:44px;height:44px;display:grid;place-items:center;position:relative}
+.mark:after{content:"";position:absolute;inset:-6px;border:1px solid #cba45d55;border-radius:50%;animation:pulseMark 2.8s ease-in-out infinite}
+.mark img{width:44px;height:44px;filter:drop-shadow(0 0 13px #dc86234a)}
+@keyframes pulseMark{0%,100%{transform:scale(.9);opacity:.18}50%{transform:scale(1.15);opacity:.75}}
+.brand strong{display:block;font-size:13px;letter-spacing:.34em}.brand small{display:block;color:#8f887a;font-size:8px;letter-spacing:.24em;margin-top:4px}
+.code{display:inline-flex;align-items:center;gap:7px;margin-top:6px;padding:5px 9px;border:1px solid #c58b4b66;border-radius:9px;background:#20160fbb;color:#ffce83;font:800 11px/1.2 Inter,sans-serif;letter-spacing:.13em}
+.code:before{content:'EDICIÓN';font-size:8px;color:#d1b28b}
+.nav{display:flex;gap:26px;align-items:center}
+.nav a{font-size:9px;text-transform:uppercase;letter-spacing:.18em;color:#aaa398;text-decoration:none;transition:.25s}
+.nav a:hover{color:var(--ink)}
+.nav .nav-cta{padding:10px 14px;border:1px solid #cba45d66;color:#f0d09a;background:#cba45d0c}
+.hero{position:relative;z-index:2;min-height:calc(100vh - 74px);display:grid;grid-template-columns:minmax(0,1.03fr) minmax(440px,.97fr);align-items:center;
+gap:5vw;width:min(1240px,92vw);margin:auto;padding:48px 0 64px}
+.hero-copy{position:relative}
+.kicker{display:inline-flex;align-items:center;gap:9px;color:#c69a4b;font-size:9px;letter-spacing:.35em;text-transform:uppercase}
+.kicker:before{content:"";width:34px;height:1px;background:linear-gradient(90deg,transparent,var(--gold))}
+.hero h1{font:600 clamp(54px,6.3vw,96px)/.88 "Cormorant Garamond",serif;letter-spacing:-.045em;margin:18px 0 20px;max-width:780px}
+.hero h1 em{font-weight:500;color:#d7ad5d}
+.hero .lead{max-width:660px;margin:0;color:#aaa398;font-size:15px;line-height:1.85;letter-spacing:.02em}
+.hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:30px}
+.btn{display:inline-flex;align-items:center;gap:10px;padding:13px 18px;text-decoration:none;font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;border:1px solid var(--line);transition:.28s}
+.btn.primary{border-color:#dc862388;background:#dc86231e;color:#ffd09b}
+.btn.secondary{border-color:#cba45d55;background:#ffffff05;color:#d4c8b4}
+.btn:hover{transform:translateY(-3px);box-shadow:0 14px 38px #0008}
+.btn.primary:hover{background:#dc862333;border-color:#dc8623}
+.hero-note{display:flex;gap:9px;align-items:center;margin-top:22px;color:#777168;font-size:10px;letter-spacing:.08em}
+.hero-note i{display:block;width:7px;height:7px;border-radius:50%;background:var(--gold);box-shadow:0 0 16px var(--gold);animation:liveDot 1.5s ease-in-out infinite}
+@keyframes liveDot{0%,100%{opacity:.35}50%{opacity:1}}
+.core-stage{position:relative;min-height:590px;display:grid;place-items:center;isolation:isolate}
+.core-aura{position:absolute;width:520px;height:520px;border-radius:50%;background:radial-gradient(circle,#dc86231f,transparent 62%);filter:blur(4px);animation:aura 5s ease-in-out infinite}
+@keyframes aura{50%{transform:scale(1.1);opacity:.65}}
+.orbit{position:absolute;border:1px solid #cba45d25;border-radius:50%;animation:spin 26s linear infinite}
+.orbit.o1{width:455px;height:455px}.orbit.o2{width:345px;height:345px;animation-duration:18s;animation-direction:reverse;border-style:dashed}.orbit.o3{width:240px;height:240px;animation-duration:13s;border-color:#dc862333}
+@keyframes spin{to{transform:rotate(360deg)}}
+.orbit:before,.orbit:after{content:"";position:absolute;width:7px;height:7px;border-radius:50%;background:var(--gold);box-shadow:0 0 18px var(--gold)}
+.orbit:before{left:50%;top:-4px}.orbit:after{right:-4px;top:50%}
+.core{position:relative;width:176px;height:176px;border-radius:50%;display:grid;place-items:center;background:
+radial-gradient(circle at 50% 42%,#2b2218,#0f0d0a 67%);border:1px solid #d7ad5d77;box-shadow:0 0 0 18px #cba45d08,0 0 90px #dc862331,inset 0 0 40px #000;z-index:4;animation:breathe 4s ease-in-out infinite}
+.core:before,.core:after{content:"";position:absolute;border-radius:50%;border:1px solid #dc86236b;inset:-18px;animation:ripple 3.4s ease-out infinite}
+.core:after{animation-delay:1.7s}
+@keyframes ripple{0%{transform:scale(.84);opacity:0}25%{opacity:.7}100%{transform:scale(1.45);opacity:0}}
+@keyframes breathe{50%{transform:scale(1.035);box-shadow:0 0 0 22px #cba45d0b,0 0 120px #dc862344,inset 0 0 45px #000}}
+.core img{width:92px;filter:drop-shadow(0 0 16px #dc862372)}
+.core-label{position:absolute;bottom:-55px;text-align:center}
+.core-label strong{display:block;font:600 22px "Cormorant Garamond",serif;letter-spacing:.06em}.core-label small{display:block;margin-top:4px;color:#827b70;font-size:8px;letter-spacing:.24em}
+.node{position:absolute;z-index:7;width:142px;padding:13px 15px;border:1px solid var(--node);background:#0d0c0aeb;backdrop-filter:blur(12px);box-shadow:0 15px 50px #0008;text-decoration:none;transition:.3s}
+.node:hover{transform:translateY(-5px) scale(1.025);box-shadow:0 22px 60px #000b,0 0 36px color-mix(in srgb,var(--node) 24%,transparent)}
+.node b{display:block;font:600 19px "Cormorant Garamond",serif}.node span{display:block;margin-top:4px;color:#8d867c;font-size:8px;letter-spacing:.14em;text-transform:uppercase}
+.node:before{content:"";position:absolute;width:58px;height:1px;background:linear-gradient(90deg,var(--node),transparent);top:50%}
+.node.cap{--node:var(--orange);left:0;top:21%}.node.cap:before{left:100%}
+.node.rub{--node:var(--cyan);right:0;top:24%}.node.rub:before{right:100%;transform:rotate(180deg);transform-origin:right center}
+.node.lol{--node:var(--rose);right:11%;bottom:8%}.node.lol:before{right:100%;transform:rotate(155deg);transform-origin:right center}
+.scroll-cue{position:absolute;left:0;bottom:10px;color:#6c665e;font-size:8px;letter-spacing:.22em;text-transform:uppercase;display:flex;align-items:center;gap:10px}
+.scroll-cue:before{content:"";width:34px;height:1px;background:#6c665e}
+.section{position:relative;z-index:2;padding:100px 0}.section.alt{background:#0c0b09aa;border-top:1px solid var(--line2);border-bottom:1px solid var(--line2)}
+.wrap{width:min(1160px,92vw);margin:auto}
+.section-head{max-width:790px;margin-bottom:46px}
+.section-head small{color:#c69a4b;font-size:9px;letter-spacing:.34em;text-transform:uppercase}
+.section-head h2{font:600 clamp(42px,5vw,68px)/.96 "Cormorant Garamond",serif;margin:12px 0 16px;letter-spacing:-.025em}
+.section-head h2 em{color:#d7ad5d;font-weight:500}.section-head p{color:#9b9487;line-height:1.8;font-size:14px}
+.manifesto{display:grid;grid-template-columns:1.12fr .88fr;gap:60px;align-items:center}
+.manifesto-copy{font:500 clamp(32px,4.1vw,54px)/1.04 "Cormorant Garamond",serif;color:#d8d0c1}
+.manifesto-copy em{color:#d7ad5d}
+.manifesto-list{display:grid;gap:1px;background:#ffffff0c;border:1px solid var(--line)}
+.manifesto-item{padding:22px 24px;background:#0d0c0a;display:grid;grid-template-columns:40px 1fr;gap:16px;align-items:start}
+.manifesto-item .n{font:italic 27px "Cormorant Garamond",serif;color:#cba45d55}.manifesto-item strong{display:block;font-size:12px;letter-spacing:.08em}.manifesto-item p{margin:7px 0 0;color:#827c73;font-size:11px;line-height:1.7}
+.systems{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.card{position:relative;min-height:390px;padding:30px 30px 28px;border:1px solid #ffffff16;background:linear-gradient(135deg,#ffffff0a,#ffffff03);text-decoration:none;color:inherit;overflow:hidden;transition:.35s ease}
+.card:hover{transform:translateY(-7px);border-color:var(--accent);box-shadow:0 24px 85px #000a,inset 0 0 80px var(--glow)}
+.card.rodolfo{--accent:var(--orange);--glow:#f0800018;background:radial-gradient(circle at 84% 30%,#8a45151e,transparent 38%),linear-gradient(135deg,#ffffff0a,#ffffff03)}
+.card.ruben{--accent:var(--cyan);--glow:#1cbfc518;background:radial-gradient(circle at 84% 30%,#126b711e,transparent 38%),linear-gradient(135deg,#ffffff0a,#ffffff03)}
+.card.lola{--accent:var(--rose);--glow:#e46f9a18;background:radial-gradient(circle at 84% 30%,#8b2d541e,transparent 38%),linear-gradient(135deg,#ffffff0a,#ffffff03)}
+.card .num{position:absolute;right:22px;top:10px;font:italic 58px "Cormorant Garamond",serif;color:#ffffff0b}
+.card .signal{width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 18px var(--accent);margin-bottom:46px;animation:liveDot 1.8s ease-in-out infinite}
+.card .eyebrow{font-size:8px;letter-spacing:.29em;color:var(--accent)}
+.card h3{font:600 39px "Cormorant Garamond",serif;margin:12px 0 12px}.card p{color:#9b9487;font-size:12px;line-height:1.75;margin:0 0 18px}
+.card .flow{display:block;color:var(--accent);font:italic 15px "Cormorant Garamond",serif;margin-top:20px}
+.card .meta{position:absolute;left:30px;bottom:24px;font-size:8px;letter-spacing:.15em;color:#aaa398}
+.card .go{position:absolute;right:24px;bottom:19px;color:var(--accent);font-size:24px}
+.card-art{position:absolute;right:-15px;top:66px;width:180px;height:180px;border:1px solid color-mix(in srgb,var(--accent) 24%,transparent);border-radius:50%;opacity:.64}
+.card-art:before,.card-art:after{content:"";position:absolute;border:1px solid color-mix(in srgb,var(--accent) 18%,transparent);border-radius:50%;inset:24px}.card-art:after{inset:50px}
+.card-art i{position:absolute;width:5px;height:5px;border-radius:50%;background:var(--accent);box-shadow:0 0 14px var(--accent);left:50%;top:-3px}
+.channels{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.channel{position:relative;min-height:330px;border:1px solid var(--line);background:#0e0d0b;padding:32px;overflow:hidden}
+.channel.web{--accent:var(--gold)}.channel.wa{--accent:#25d366}
+.channel:before{content:"";position:absolute;width:300px;height:300px;border-radius:50%;right:-110px;top:-120px;background:radial-gradient(circle,color-mix(in srgb,var(--accent) 16%,transparent),transparent 66%)}
+.channel .icon{width:52px;height:52px;border:1px solid color-mix(in srgb,var(--accent) 55%,transparent);display:grid;place-items:center;font-size:25px;color:var(--accent);margin-bottom:40px}
+.channel h3{font:600 36px "Cormorant Garamond",serif;margin:0 0 12px}.channel p{color:#938c82;font-size:12px;line-height:1.75;max-width:500px}
+.channel .mini{display:flex;flex-wrap:wrap;gap:8px;margin-top:24px}.channel .mini span{padding:7px 9px;border:1px solid color-mix(in srgb,var(--accent) 32%,transparent);font-size:8px;letter-spacing:.13em;color:#b7b0a6}
+.chat{margin-top:22px;display:grid;gap:8px;max-width:430px}
+.bubble{max-width:85%;padding:9px 12px;border-radius:12px;font-size:10px;line-height:1.5}.bubble.user{justify-self:end;background:#005c4b;color:#e9edef}.bubble.bot{justify-self:start;background:#1f2c34;color:#e9edef}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:#ffffff0c;border:1px solid var(--line)}
+.step{background:#0d0c0a;padding:30px}.step .step-num{font:italic 36px "Cormorant Garamond",serif;color:#cba45d55}.step h3{font:600 28px "Cormorant Garamond",serif;margin:14px 0 9px}.step p{font-size:11px;line-height:1.75;color:#858078;margin:0}
+.local-install{display:flex;justify-content:center;margin-top:24px}.local-install a{display:inline-flex;align-items:center;gap:10px;padding:13px 18px;border:1px solid #dc862388;background:#dc862318;color:#ffd09b;text-decoration:none;font-size:10px;font-weight:800;letter-spacing:.08em}.local-install small{color:#8f887e}
+.final{padding:120px 0;text-align:center;position:relative;overflow:hidden}.final:before{content:"";position:absolute;left:50%;top:50%;width:520px;height:520px;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle,#dc86231c,transparent 65%)}
+.final .brain{position:relative;width:82px;margin:0 auto 22px;filter:drop-shadow(0 0 20px #dc86235d);animation:breathe 4s ease-in-out infinite}
+.final h2{position:relative;font:600 clamp(48px,6vw,78px)/.95 "Cormorant Garamond",serif;margin:0}.final p{position:relative;color:#928b80;max-width:620px;margin:18px auto 0;line-height:1.8;font-size:13px}
+.footer{position:relative;z-index:2;border-top:1px solid var(--line2);padding:28px 4vw;display:flex;justify-content:space-between;gap:20px;color:#625f59;font-size:8px;letter-spacing:.2em;text-transform:uppercase}
+.reveal{opacity:0;transform:translateY(24px);transition:opacity .7s ease,transform .7s ease}.reveal.visible{opacity:1;transform:none}
+@media(max-width:980px){
+ .nav{display:none}.hero{grid-template-columns:1fr;min-height:auto;padding-top:76px}.hero-copy{text-align:center}.hero .lead{margin:auto}.hero-actions{justify-content:center}.hero-note{justify-content:center}
+ .core-stage{min-height:520px;max-width:650px;margin:auto;width:100%}.scroll-cue{display:none}.manifesto{grid-template-columns:1fr}.systems{grid-template-columns:1fr}.channels{grid-template-columns:1fr}.steps{grid-template-columns:1fr}
+}
+@media(max-width:680px){
+ .top{padding:12px 16px}.brand small{display:none}.hero{width:min(92vw,620px);padding-top:48px}.hero h1{font-size:52px}.hero .lead{font-size:13px}
+ .core-stage{min-height:450px;transform:scale(.86);margin:-28px auto}.orbit.o1{width:390px;height:390px}.orbit.o2{width:300px;height:300px}.node{width:126px;padding:11px}.node.cap{left:-4%}.node.rub{right:-4%}.node.lol{right:7%;bottom:3%}
+ .section{padding:72px 0}.section-head h2{font-size:44px}.manifesto-copy{font-size:38px}.card{min-height:355px;padding:26px 24px}.card .meta{left:24px}.channels .channel{padding:26px}.footer{flex-direction:column;text-align:center}
+}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}.reveal{opacity:1;transform:none}}
 </style>
 <link rel="stylesheet" href="theme.css">
 <script src="theme.js" defer></script>
 <script src="doinglio-window.js" defer></script>
-<script src="versiones.js?v=35" defer></script>
+<script src="versiones.js?v=36" defer></script>
 </head>
 <body>
-  <div class="doomsday-bg" aria-hidden="true">
-    <svg class="doomsday-clock-bg" viewBox="0 0 500 500">
-      <defs>
-        <linearGradient id="spiralGlow" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stop-color="#ffd083" stop-opacity=".96"/>
-          <stop offset=".48" stop-color="#dc8623" stop-opacity=".80"/>
-          <stop offset="1" stop-color="#cba45d" stop-opacity=".16"/>
-        </linearGradient>
-      </defs>
-      <circle class="doom-orbit" cx="250" cy="250" r="182"/>
-      <circle class="doom-orbit dash" cx="250" cy="250" r="154"/>
-      <circle class="doom-orbit" cx="250" cy="250" r="112" opacity=".55"/>
-      <g>
-        <line class="doom-tick major" x1="250" y1="56" x2="250" y2="72"/>
-        <line class="doom-tick" x1="347" y1="82" x2="339" y2="96"/>
-        <line class="doom-tick major" x1="418" y1="153" x2="404" y2="161"/>
-        <line class="doom-tick" x1="444" y1="250" x2="428" y2="250"/>
-        <line class="doom-tick major" x1="418" y1="347" x2="404" y2="339"/>
-        <line class="doom-tick" x1="347" y1="418" x2="339" y2="404"/>
-        <line class="doom-tick major" x1="250" y1="444" x2="250" y2="428"/>
-        <line class="doom-tick" x1="153" y1="418" x2="161" y2="404"/>
-        <line class="doom-tick major" x1="82" y1="347" x2="96" y2="339"/>
-        <line class="doom-tick" x1="56" y1="250" x2="72" y2="250"/>
-        <line class="doom-tick major" x1="82" y1="153" x2="96" y2="161"/>
-        <line class="doom-tick" x1="153" y1="82" x2="161" y2="96"/>
-      </g>
-      <path class="doom-spiral" d="M250 250
-        C252 244 260 244 264 250
-        C270 260 261 273 248 273
-        C228 273 218 252 225 235
-        C236 209 272 204 294 222
-        C325 247 316 296 283 316
-        C239 343 180 317 166 269
-        C148 208 196 151 258 151
-        C334 151 385 220 366 291
-        C342 379 246 415 171 373
-        C80 322 69 196 140 121
-        C224 32 379 61 443 166"/>
-      <circle class="doom-trail-point" cx="443" cy="166" r="4.4"/>
-      <g transform="rotate(60 250 250)"><line class="doom-hand minute" x1="250" y1="250" x2="250" y2="101"/></g>
-      <g transform="rotate(125 250 250)"><line class="doom-hand hour" x1="250" y1="250" x2="250" y2="145"/></g>
-      <circle class="doom-center-ring" cx="250" cy="250" r="11"/>
-      <circle class="doom-center" cx="250" cy="250" r="4.5"/>
-    </svg>
+<header class="top">
+  <a class="brand" href="#inicio">
+    <span class="mark"><img src="brain-davinci.svg" alt=""></span>
+    <span><strong>DOINGLIO</strong><small>ECOSISTEMA INTELIGENTE · REVALSOFT IA</small><span class="code" id="build-code">D·…</span></span>
+  </a>
+  <nav class="nav" aria-label="Navegación principal">
+    <a href="#que-es">Qué es</a><a href="#especialistas">Especialistas</a><a href="#canales">Entradas</a><a href="#como-funciona">Cómo funciona</a>
+    <a class="nav-cta" href="#especialistas">Entrar a DoingLio</a>
+  </nav>
+</header>
+
+<main>
+<section class="hero" id="inicio">
+  <div class="hero-copy reveal">
+    <span class="kicker">Un ecosistema · una puerta · múltiples inteligencias</span>
+    <h1>No abrís un sistema.<br><em>Activás</em> lo que necesitás.</h1>
+    <p class="lead">DoingLio es la puerta de entrada a especialistas que entienden contextos distintos, trabajan con tus datos y aparecen cuando los necesitás. Desde la web o desde WhatsApp, la conversación empieza en el mismo lugar.</p>
+    <div class="hero-actions">
+      <a class="btn primary" href="#especialistas">Entrar por la web <span>↗</span></a>
+      <a class="btn secondary" href="#canales">Entrar por WhatsApp <span>→</span></a>
+    </div>
+    <div class="hero-note"><i></i><span>DOINGLIO ESTÁ VIVO · EL NÚCLEO CONECTA, LOS ESPECIALISTAS RESUELVEN</span></div>
+    <div class="scroll-cue">explorá el ecosistema</div>
   </div>
 
-  <header class="top">
-    <div class="brand">
-      <div class="mark" aria-hidden="true"><img src="brain-davinci.svg" alt=""></div>
-      <div><strong>DOINGLIO</strong><small>LABORATORIO DE SISTEMAS VIVOS</small><div class="code" id="build-code" aria-label="Versión instalada de DoingLio">D·…</div></div>
+  <div class="core-stage reveal" aria-label="Núcleo de DoingLio y sus especialistas">
+    <div class="core-aura"></div><div class="orbit o1"></div><div class="orbit o2"></div><div class="orbit o3"></div>
+    <div class="core">
+      <img src="brain-davinci.svg" alt="DoingLio">
+      <div class="core-label"><strong>DoingLio</strong><small>NÚCLEO</small></div>
     </div>
-  </header>
+    <a class="node cap" href="#capitan"><b>Capitán Rodolfo</b><span>Estación de servicio</span></a>
+    <a class="node rub" href="#ruben"><b>Rubén</b><span>Siniestros</span></a>
+    <a class="node lol" href="#lola"><b>Lola Redes</b><span>Comunicación</span></a>
+  </div>
+</section>
 
-  <main>
-    <section class="hero">
-      <small>CUADERNO MAESTRO</small>
+<section class="section alt" id="que-es">
+  <div class="wrap manifesto">
+    <div class="manifesto-copy reveal">DoingLio no intenta saberlo todo.<br><em>Sabe a quién despertar.</em></div>
+    <div class="manifesto-list reveal">
+      <div class="manifesto-item"><span class="n">01</span><div><strong>UNA IDENTIDAD</strong><p>Entrás una vez. DoingLio reconoce tu contexto y te conecta con el especialista adecuado.</p></div></div>
+      <div class="manifesto-item"><span class="n">02</span><div><strong>ESPECIALISTAS REALES</strong><p>Cada especialista tiene su propio mundo, lenguaje, datos y forma de trabajar.</p></div></div>
+      <div class="manifesto-item"><span class="n">03</span><div><strong>UN MISMO NÚCLEO</strong><p>La experiencia sigue siendo DoingLio: web, WhatsApp y conexiones locales formando un solo ecosistema.</p></div></div>
+    </div>
+  </div>
+</section>
 
-      <h1>Elegí el sistema<br>que querés <em>activar.</em></h1>
-      <p>Cada especialista vive separado. DoingLio es la puerta de entrada.</p>
-    </section>
-
-    <section class="local-install" id="local-install">
-      <a href="INSTALAR_DOINGLIO.bat?v=35" download="INSTALAR_DOINGLIO.bat">
-        🧠 INSTALAR DOINGLIO EN EL ESCRITORIO
-        <small>icono de cerebro · actualización automática</small>
-      </a>
-    </section>
-
-    <section class="systems">
-      <a class="card rodolfo" id="open-capitan" href="https://duiliomf.github.io/capitan-rodolfo/" target="_self">
-        <span class="num">01</span>
-        <svg class="blueprint" viewBox="0 0 300 180" aria-hidden="true">
-          <circle class="soft" cx="225" cy="90" r="73"/>
-          <circle class="soft" cx="225" cy="90" r="54"/>
-          <path d="M28 130h244M45 130v-42h45v42M50 88l8-28h19l8 28"/>
-          <path d="M57 72h20M112 130V76h42v54M118 83h30v18h-30zM134 101v17"/>
-          <path d="M154 94c23 0 20 30 39 30"/>
-          <path d="M188 124h58l10-23h23l14 23h7v12H184v-12h4z"/>
-          <circle cx="213" cy="137" r="9"/><circle cx="272" cy="137" r="9"/>
-          <path d="M18 145c35 8 76 8 111 0s76-8 111 0 42 5 58 0"/>
-          <path class="soft" d="M40 52h80M104 63h74M188 47h92"/>
-        </svg>
-        <span class="eyebrow">ESTACIÓN DE SERVICIO</span>
-        <h2>Capitán Rodolfo</h2>
+<section class="section" id="especialistas">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <small>Especialistas DoingLio</small>
+      <h2>Tres mundos.<br><em>Una misma puerta.</em></h2>
+      <p>No son módulos de un menú. Son especialistas independientes, cada uno construido para entender un problema concreto y llevarlo de punta a punta.</p>
+    </div>
+    <div class="systems">
+      <a class="card rodolfo reveal" id="open-capitan" href="https://duiliomf.github.io/capitan-rodolfo/" target="_self">
+        <span class="num">01</span><span class="signal"></span><span class="card-art"><i></i></span>
+        <span class="eyebrow">ESTACIÓN DE SERVICIO</span><h3 id="capitan">Capitán Rodolfo</h3>
         <p>Combustible, tanques, surtidores, despachos, ventas y cobros dentro del tablero vivo de la estación.</p>
-        <span class="tagline">tanque → surtidor → auto → cobro</span>
-        <span class="meta" id="capitan-meta"><span class="dot"></span>GITHUB PAGES · REPO INDEPENDIENTE</span>
-        <span class="go">ABRIR <b>↗</b></span>
+        <span class="flow">tanque → surtidor → auto → cobro</span>
+        <span class="meta" id="capitan-meta">CAPITÁN · verificando versión…</span><span class="go">↗</span>
       </a>
-
-      <a class="card ruben" id="open-ruben" href="https://duiliomf.github.io/ruben/" target="_self">
-        <span class="num">02</span>
-        <svg class="blueprint" viewBox="0 0 300 180" aria-hidden="true">
-          <circle class="soft" cx="228" cy="88" r="68"/>
-          <path d="M35 124h65l13-31h44l25 31h18v14H28v-14h7z"/>
-          <circle cx="67" cy="140" r="10"/><circle cx="157" cy="140" r="10"/>
-          <path d="M167 79l16-18 7 15 19-18 4 20 24-6-8 21 24 8-20 13"/>
-          <rect x="210" y="112" width="62" height="48" rx="2"/>
-          <path d="M220 124h39M220 135h32M220 146h36"/>
-          <path class="soft" d="M18 51h85M30 63h55M200 41h76"/>
-        </svg>
-        <span class="eyebrow">SINIESTROS · REPARACIÓN</span>
-        <h2>Ruben</h2>
+      <a class="card ruben reveal" id="open-ruben" href="https://duiliomf.github.io/ruben/" target="_self">
+        <span class="num">02</span><span class="signal"></span><span class="card-art"><i></i></span>
+        <span class="eyebrow">SINIESTROS · REPARACIÓN</span><h3 id="ruben">Rubén</h3>
         <p>Del choque al cierre: presupuesto, autorización, repuestos, reparación, entrega, facturación y cobranza.</p>
-        <span class="tagline">siniestro → presupuesto → reparación → entrega</span>
-        <span class="meta" id="ruben-meta"><span class="dot"></span>GITHUB PAGES · WEB INDEPENDIENTE</span>
-        <span class="go">ABRIR <b>↗</b></span>
+        <span class="flow">siniestro → presupuesto → reparación → entrega</span>
+        <span class="meta" id="ruben-meta">RUBÉN · verificando versión…</span><span class="go">↗</span>
       </a>
-
-      <a class="card lola" id="open-lola" href="./lola-redes.html" target="_self">
-        <span class="num">03</span>
-        <svg class="blueprint" viewBox="0 0 300 180" aria-hidden="true">
-          <circle class="soft" cx="224" cy="88" r="68"/>
-          <path d="M46 124c22-34 42-51 65-51 21 0 34 14 47 31 13-17 27-31 48-31 21 0 39 15 58 45"/>
-          <circle cx="83" cy="91" r="17"/><circle cx="156" cy="76" r="17"/><circle cx="229" cy="94" r="17"/>
-          <path d="M71 91h24M144 76h24M217 94h24"/>
-          <path d="M83 79v24M156 64v24M229 82v24"/>
-        </svg>
-        <span class="eyebrow">COMUNICACIÓN · REDES</span>
-        <h2>Lola Redes</h2>
+      <a class="card lola reveal" id="open-lola" href="./lola-redes.html" target="_self">
+        <span class="num">03</span><span class="signal"></span><span class="card-art"><i></i></span>
+        <span class="eyebrow">COMUNICACIÓN · REDES</span><h3 id="lola">Lola Redes</h3>
         <p>Facebook, Instagram, WhatsApp, LinkedIn y TikTok con una sola voz de marca.</p>
-        <span class="tagline">escuchar → crear → aprobar → publicar</span>
-        <span class="meta"><span class="dot"></span>DOINGLIO D35 · VENTANA INICIAL</span>
-        <span class="go">ABRIR <b>↗</b></span>
+        <span class="flow">escuchar → crear → aprobar → publicar</span>
+        <span class="meta">LOLA REDES · DOINGLIO</span><span class="go">↗</span>
       </a>
-    </section>
-  </main>
+    </div>
+  </div>
+</section>
 
-  <footer><span>REVALSOFT IA</span><i></i><span>DOINGLIO · CUADERNO MAESTRO</span></footer>
+<section class="section alt" id="canales">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <small>Dos entradas · un mismo DoingLio</small>
+      <h2>Entrá como te resulte <em>natural.</em></h2>
+      <p>La interfaz cambia. La identidad y los permisos no. DoingLio funciona como puerta de entrada y el especialista aparece detrás.</p>
+    </div>
+    <div class="channels">
+      <div class="channel web reveal">
+        <div class="icon">⌁</div><h3>Desde la web</h3>
+        <p>Entrás a DoingLio, ves los especialistas que forman el ecosistema y abrís el que necesitás. Cada especialista conserva su propia experiencia.</p>
+        <div class="mini"><span>DOINGLIO</span><span>CAPITÁN</span><span>RUBÉN</span><span>LOLA</span></div>
+      </div>
+      <div class="channel wa reveal">
+        <div class="icon">◉</div><h3>Desde WhatsApp</h3>
+        <p>Le hablás a DoingLio. Si tu número está habilitado, reconoce tus permisos y deriva la conversación al especialista correspondiente.</p>
+        <div class="chat" aria-label="Ejemplo de conversación">
+          <div class="bubble user">DoingLio, mostrame los tanques.</div>
+          <div class="bubble bot">Entrando a Capitán Rodolfo…</div>
+          <div class="bubble user">Lola, prepará una publicación.</div>
+          <div class="bubble bot">Entrando a Lola Redes…</div>
+        </div>
+      </div>
+    </div>
+    <div class="local-install" id="local-install">
+      <a href="INSTALAR_DOINGLIO.bat?v=36" download="INSTALAR_DOINGLIO.bat">🧠 INSTALAR DOINGLIO EN EL ESCRITORIO <small>· actualización automática</small></a>
+    </div>
+  </div>
+</section>
 
+<section class="section" id="como-funciona">
+  <div class="wrap">
+    <div class="section-head reveal"><small>La lógica detrás</small><h2>Simple por fuera.<br><em>Inteligente por dentro.</em></h2></div>
+    <div class="steps">
+      <div class="step reveal"><span class="step-num">01</span><h3>Entrás</h3><p>Desde la web o WhatsApp. DoingLio es la primera capa y mantiene una sola experiencia de acceso.</p></div>
+      <div class="step reveal"><span class="step-num">02</span><h3>Te reconoce</h3><p>Identidad, permisos y contexto determinan qué especialista puede actuar y sobre qué información.</p></div>
+      <div class="step reveal"><span class="step-num">03</span><h3>El especialista actúa</h3><p>Capitán Rodolfo, Rubén o Lola Redes toman la conversación y trabajan dentro de su propio dominio.</p></div>
+    </div>
+  </div>
+</section>
 
+<section class="final">
+  <img class="brain" src="brain-davinci.svg" alt="">
+  <h2 class="reveal">No es un menú.<br>Es un <em style="color:#d7ad5d;font-weight:500">ecosistema vivo.</em></h2>
+  <p class="reveal">Revalsoft IA construye DoingLio para que cada problema encuentre a su especialista, sin obligarte a pensar qué sistema hay detrás.</p>
+</section>
+</main>
+
+<footer class="footer"><span>REVALSOFT IA · DOINGLIO</span><span>ECOSISTEMA INTELIGENTE</span><span>ROSARIO · ARGENTINA</span></footer>
+
+<script>
+(function(){
+  const items=document.querySelectorAll('.reveal');
+  const io=new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible')}),{threshold:.12});
+  items.forEach(x=>io.observe(x));
+  requestAnimationFrame(()=>document.querySelectorAll('.hero .reveal').forEach(x=>x.classList.add('visible')));
+})();
+</script>
 </body>
 </html>
