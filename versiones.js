@@ -9,7 +9,7 @@
       remote:'https://duiliomf.github.io/capitan-rodolfo/VERSION',
       main:'https://raw.githubusercontent.com/DuilioMF/capitan-rodolfo/main/VERSION',
       local:'./capitan-rodolfo/VERSION'},
-    {name:'Rubén',key:'ruben',short:'R',label:document.getElementById('ruben-meta'),
+    {name:'Ruben',key:'ruben',short:'R',label:document.getElementById('ruben-meta'),
       remote:'https://duiliomf.github.io/ruben/VERSION',
       main:'https://raw.githubusercontent.com/DuilioMF/ruben/main/VERSION',
       local:'./ruben/VERSION'},
