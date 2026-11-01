@@ -92,3 +92,25 @@ jobs:
             exit 1
           fi
           echo "BUILD público D$expected verificado para commit $GITHUB_SHA"
+
+      - name: Verificar la vista TEST de El Chamán en Pages
+        shell: bash
+        env:
+          PREVIEW_URL: https://doinglio.revalsoftia.com.ar/qa/chaman-100/
+        run: |
+          set -euo pipefail
+          success=0
+          for attempt in {1..12}; do
+            if curl --location --silent --show-error --fail --max-time 12 --header 'Cache-Control: no-cache' "$PREVIEW_URL?sha=${GITHUB_SHA}&attempt=$attempt" -o /tmp/chaman-qa.html 2>/dev/null; then
+              if grep -q 'EL CHAMÁN · TEST #100' /tmp/chaman-qa.html && grep -q 'signInWithOtp' /tmp/chaman-qa.html && grep -q 'chaman_access' /tmp/chaman-qa.html; then
+                success=1
+                break
+              fi
+            fi
+            sleep 5
+          done
+          if [[ "$success" != 1 ]]; then
+            echo "::error::La vista TEST del Chamán no se puede abrir con HTML esperado"
+            exit 1
+          fi
+          echo "Vista TEST Chamán HTTP y contenido verificados en Pages"
