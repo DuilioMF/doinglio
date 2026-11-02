@@ -1,0 +1,17 @@
+name: DoingLio · Regresión especialistas
+on:
+  push:
+    branches: [feat/el-chaman-entry]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  integration:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verificar cuatro especialistas sin regresiones
+        run: node --test tests/chaman-integration.test.mjs
